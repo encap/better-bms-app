@@ -1,0 +1,23 @@
+module.exports = {
+  "singleQuote": true,
+  "jsxBracketSameLine": false,
+  "useTabs": false,
+  "eslintIntegration": false,
+  "tslintIntegration": true,
+  "requireConfig": false,
+  "stylelintIntegration": false,
+  "arrowParens": "always",
+  "bracketSpacing": true,
+  "embeddedLanguageFormatting": "auto",
+  "htmlWhitespaceSensitivity": "css",
+  "insertPragma": false,
+  "jsxSingleQuote": true,
+  "tsxSingleQuote": true,
+  "printWidth": 80,
+  "proseWrap": "preserve",
+  "quoteProps": "as-needed",
+  "requirePragma": false,
+  "semi": true,
+  "tabWidth": 2,
+  "trailingComma": "es5"
+}
