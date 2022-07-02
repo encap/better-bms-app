@@ -52,6 +52,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "husky": "^8.0.1",
     "prettier": "^2.7.1",
-    "prettier-eslint": "^15.0.1"
+    "prettier-eslint": "^15.0.1",
+    "ts-essentials": "^9.1.2"
   }
 }
