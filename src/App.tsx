@@ -4,26 +4,36 @@ import main from './ble-poc';
 
 function App() {
   const [loading, setLoading] = useState(false);
-  const [voltage, setVoltage] = useState<number | null>(null);
+  const [data, setData] = useState<{
+    voltage: number;
+    power: number;
+    current: number;
+  } | null>(null);
 
   return (
     <div
       className='App'
       onClick={() => {
         setLoading(true);
-        main((v) => {
-          setVoltage(v);
+        main((d) => {
+          setData(d);
           setLoading(false);
         });
       }}
     >
       {loading ? (
         <h2>{'Loading...'}</h2>
-      ) : voltage ? (
+      ) : data ? (
         <>
           <h1>
-            {voltage.toFixed(3)}
+            {String(data.voltage.toFixed(5)).slice(0, 6)}
             {'V'}
+            <br />
+            {String(data.current.toFixed(5)).slice(0, 6)}
+            {'A'}
+            <br />
+            {String(data.power.toFixed(5)).slice(0, 6)}
+            {'W'}
           </h1>
         </>
       ) : (

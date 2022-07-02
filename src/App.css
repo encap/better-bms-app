@@ -8,8 +8,9 @@
   font-size: calc(10px + 2vmin);
   color: white;
   cursor: pointer;
+  font-family: monospace;
 }
 
 h1 {
-  font-size: 100px
+  font-size: 70px
 }
