@@ -15,7 +15,7 @@ export type DeviceStatus =
   | 'paused';
 
 export type DeviceCallbacks = {
-  onPreviousUnaviable?(device: BluetoothDevice): void;
+  onPreviousUnaviable?(device: BluetoothDevice | null): void;
   onRequestDeviceError?(error: Error): void;
   onStatusChange?(status: DeviceStatus): void;
   onConnected?(deviceIdentificator: DeviceIdentificator): void;
@@ -29,16 +29,14 @@ export type ConnectOptions = {
 
 export interface Device {
   status: DeviceStatus;
-  deviceIdenticator: DeviceIdentificator;
+  deviceIdenticator: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
-  data: Data;
-  decoder: Decoder<string>;
+  data: Data | null;
+  decoder: Decoder<string> | null;
 
-  new (callbacks: DeviceCallbacks): this;
+  connect(options?: ConnectOptions): Promise<DeviceIdentificator | null>;
 
-  connect(options?: ConnectOptions): Promise<DeviceIdentificator>;
+  disconnect(): Promise<DeviceIdentificator | null>;
 
-  disconnect(): DeviceIdentificator;
-
-  pause(): void;
+  pause(): Promise<void>;
 }

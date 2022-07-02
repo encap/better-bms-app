@@ -25,7 +25,7 @@ export type Group = StrictExtract<keyof Data, 'batteryData' | 'deviceInfo'>;
 export type Name = keyof Exclude<Data['batteryData'], undefined>;
 export type GroupAndName = [Group, Name];
 export type GetterFunction = (itemData: {
-  itemBuffer: ArrayBufferLike;
+  itemBuffer: ArrayBuffer;
   length: ByteLength;
   byteOffset: ByteLength;
   buffer: ArrayBuffer;
@@ -44,10 +44,8 @@ export type ProtocolDefinition<T extends string> = Record<
 export interface Decoder<T extends string> {
   protocol: ProtocolDefinition<T>;
 
-  new (protocol: ProtocolDefinition<T>): this;
-
   decode(
     commnad: T,
-    buffer: ArrayBufferLike
+    buffer: ArrayBuffer
   ): Pick<Data, 'batteryData' | 'deviceInfo'>;
 }

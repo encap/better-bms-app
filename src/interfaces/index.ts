@@ -15,3 +15,5 @@ export type CellCount = number;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type ArrayOfLength<T, N extends number> = T[];
+
+export type HexString = string;

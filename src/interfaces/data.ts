@@ -4,7 +4,7 @@ import { ArrayOfLength, CellChemistry, CellCount, Units } from '.';
 export type UnknowDataSegment = DeepReadonly<{
   offset: number;
   length: number;
-  buffer: ArrayBufferLike;
+  buffer: ArrayBuffer;
 }>;
 
 export type Data = DeepReadonly<{

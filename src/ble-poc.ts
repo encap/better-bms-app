@@ -123,7 +123,10 @@ export default async function main(
   );
 }
 
-export function processData(data: Uint8Array, handleData: (data: any) => void) {
+export function processData(
+  data: Uint8Array,
+  handleData?: (data: any) => void
+) {
   console.log(buf2hex(data.buffer));
   console.log(data);
   const dataView = new DataView(data.buffer);
@@ -141,5 +144,5 @@ export function processData(data: Uint8Array, handleData: (data: any) => void) {
 
   console.log({ voltage, power, current });
 
-  handleData({ voltage, power, current });
+  handleData?.({ voltage, power, current });
 }
