@@ -1,9 +1,9 @@
+const BMS_NAME = 'JK-B1A24S15P';
 const CMD_ACTIVATE = '01 00';
 const CMD_DEVICE_INFO =
   'aa 55 90 eb 97 00 00 00 00 00 00 00 00 00 00 00 00 00 00 11';
 const CMD_CELL_DATA =
   'aa 55 90 eb 96 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10';
-
 const SERVICE = 0xffe0;
 const CHARACTERISTIC = 0xffe1;
 
@@ -25,14 +25,38 @@ function buf2hex(buffer: ArrayBuffer | undefined): string {
 }
 
 export default async function main(setVoltage: (v: number) => void) {
-  const device = await navigator.bluetooth.requestDevice({
-    filters: [
-      {
-        services: [SERVICE],
-      },
-    ],
-  });
-  console.log({ device });
+  const pairedDevices = await navigator.bluetooth.getDevices();
+
+  const previousBms = pairedDevices?.find((device) => device.name === BMS_NAME);
+
+  const device =
+    previousBms ||
+    (await navigator.bluetooth.requestDevice({
+      filters: [
+        {
+          services: [SERVICE],
+        },
+      ],
+    }));
+
+  console.log({ pairedDevices, previousBms, device });
+
+  if (previousBms) {
+    const abortController = new AbortController();
+    await device.watchAdvertisements({ signal: abortController.signal });
+    await new Promise((resolve) =>
+      device.addEventListener('advertisementreceived', (event) => {
+        console.log('Advertisement received.');
+        console.log('  Device Name: ' + event.device.name);
+        console.log('  Device ID: ' + event.device.id);
+        console.log('  RSSI: ' + event.rssi);
+        console.log('  TX Power: ' + event.txPower);
+        console.log('  UUIDs: ' + event.uuids);
+
+        resolve(true);
+      })
+    );
+  }
 
   const server = await device.gatt?.connect();
   console.log({ server });
@@ -86,11 +110,12 @@ export default async function main(setVoltage: (v: number) => void) {
         ]);
       }
 
-      if (responseAcc.byteLength >= 600) {
+      if (responseAcc.byteLength >= 300) {
         processData(responseAcc, setVoltage);
-        charateristic.stopNotifications();
-        device?.gatt?.disconnect();
-        server?.disconnect();
+        responseAcc = new Uint8Array();
+        // charateristic.stopNotifications();
+        // device?.gatt?.disconnect();
+        // server?.disconnect();
       }
     }
   );
@@ -102,15 +127,15 @@ export function processData(
 ) {
   console.log(buf2hex(data.buffer));
   console.log(data);
-  const candidates = Array.from(Array(30))
+  const candidates = Array.from(Array(50))
     .map(
       (_, i) =>
         new DataView(data.buffer).getUint32(
-          Math.min(300 + 125 + i, data.buffer.byteLength - 4),
+          Math.min(110 + i, data.buffer.byteLength - 4),
           true
         ) / 1000
     )
-    .filter((v) => v > 50 && v < 85);
+    .filter((v) => v > 79 && v < 84);
 
   console.log('Voltage: ', ...candidates);
 

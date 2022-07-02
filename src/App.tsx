@@ -22,7 +22,7 @@ function App() {
       ) : voltage ? (
         <>
           <h1>
-            {voltage}
+            {voltage.toFixed(3)}
             {'V'}
           </h1>
         </>
