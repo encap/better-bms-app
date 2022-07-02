@@ -52,8 +52,8 @@ export class JKBMS implements Device {
 
     let device: BluetoothDevice | null = null;
 
-    if (options?.previous) {
-      try {
+    try {
+      if (options?.previous) {
         const previousDevice = await this.tryGetPreviousDevice(
           options.previous
         );
@@ -61,26 +61,21 @@ export class JKBMS implements Device {
         if (previousDevice) {
           device = previousDevice;
         } else {
-          this.callbacks.onPreviousUnaviable?.(previousDevice);
+          // We can't call requestBluetoothDevice without second user interaction.
+          // https://developer.chrome.com/blog/user-activation/
+          this.setStatus('disconnected');
           return null;
         }
-      } catch (error) {
-        return null;
-      }
-    } else {
-      // We can't call requestBluetoothDevice without second user interaction.
-      // https://developer.chrome.com/blog/user-activation/
-      try {
+      } else {
         const userSelectedDevice = await this.requestBluetoothDevice();
 
         device = userSelectedDevice;
-      } catch (error) {
-        this.setStatus('disconnected');
-
-        this.callbacks.onRequestDeviceError?.(error as Error);
-
-        return null;
       }
+    } catch (error) {
+      this.setStatus('disconnected');
+      this.callbacks.onRequestDeviceError?.(error as Error);
+
+      return null;
     }
 
     try {
@@ -181,6 +176,8 @@ export class JKBMS implements Device {
 
       return matchedDevice;
     }
+
+    this.callbacks.onPreviousUnaviable?.(null);
 
     return null;
   }

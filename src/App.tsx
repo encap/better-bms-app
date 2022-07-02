@@ -39,7 +39,7 @@ function App() {
       }}
     >
       <h2>
-        {status}
+        {status === 'disconnected' ? `Click to connect` : status}
       </h2>
 
       <br />
