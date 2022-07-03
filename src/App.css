@@ -1,16 +1,17 @@
 .App {
-  background-color: black;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
   cursor: pointer;
   font-family: monospace;
+  padding-top: 10vh;
+  background-color: black;
+  height: 100%;
 }
 
 h1 {
-  font-size: 70px
+  font-size: 70px;
+  margin: 15px 10px;
 }

@@ -42,8 +42,6 @@ function App() {
         {status === 'disconnected' ? `Click to connect` : status}
       </h2>
 
-      <br />
-
       {data && data.batteryData && (
         <>
           <h1>
