@@ -31,7 +31,7 @@ export interface Device {
   status: DeviceStatus;
   deviceIdenticator: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
-  data: Data | null;
+  lastPublicData: Data | null;
   decoder: Decoder<string> | null;
 
   connect(options?: ConnectOptions): Promise<DeviceIdentificator | null>;

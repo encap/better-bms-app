@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ResponseDecoder } from '../../decoders/responseDecoder';
-import { HexString } from '../../interfaces';
 import { Data } from '../../interfaces/data';
-import { Decoder } from '../../interfaces/decoder';
+import { DecodedResponseData, Decoder } from '../../interfaces/decoder';
 import {
   ConnectOptions,
   Device,
@@ -9,38 +9,34 @@ import {
   DeviceIdentificator,
   DeviceStatus,
 } from '../../interfaces/device';
+import { CommandDefinition } from '../../interfaces/protocol';
 import { wait } from '../../utils';
-import { bufferToHexString, hexStringToBuffer } from '../../utils/binary';
-import {
-  CHARACTERISTIC_UUID,
-  JKBMS_COMMANDS,
-  JKBMS_PROTOCOL,
-  SERVICE_UUID,
-  TIMEOUTS,
-  WRITE_CHARACTERISTIC_DELAY,
-} from './config';
+import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
 export class JKBMS implements Device {
+  protocol: typeof JKBMS_PROTOCOL;
   status!: DeviceStatus;
   deviceIdenticator: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
-  data: Data | null;
-  decoder: Decoder<string> | null;
+  lastPublicData: Data | null;
+  decoder: Decoder<string>;
+  responseBuffer!: Uint8Array;
   private characteristic: BluetoothRemoteGATTCharacteristic | null;
-  private bluetoothDevice: BluetoothDevice | null;
 
   constructor(callbacks: DeviceCallbacks) {
+    this.protocol = JKBMS_PROTOCOL;
     this.callbacks = callbacks;
     this.setStatus('disconnected');
     this.deviceIdenticator = null;
-    this.data = null;
-    this.decoder = new ResponseDecoder(JKBMS_PROTOCOL);
+    this.lastPublicData = null;
+    this.decoder = new ResponseDecoder(this.protocol);
 
     this.characteristic = null;
-    this.bluetoothDevice = null;
+
+    this.flushResponseBuffer();
   }
 
-  private async setStatus(newStatus: DeviceStatus) {
+  private setStatus(newStatus: DeviceStatus): void {
     this.status = newStatus;
     this.callbacks.onStatusChange?.(newStatus);
   }
@@ -85,18 +81,22 @@ export class JKBMS implements Device {
         throw new Error(`Can't connect to GAAT Server`);
       }
 
-      const service = await server?.getPrimaryService(SERVICE_UUID);
+      const service = await server?.getPrimaryService(
+        this.protocol.serviceUuid
+      );
 
       if (!service) {
-        throw new Error(`Service ${SERVICE_UUID} not found`);
+        throw new Error(`Service ${this.protocol.serviceUuid} not found`);
       }
 
       const charateristic = await service?.getCharacteristic(
-        CHARACTERISTIC_UUID
+        this.protocol.characteristicUuid
       );
 
       if (!charateristic) {
-        throw new Error(`Service ${CHARACTERISTIC_UUID} not found`);
+        throw new Error(
+          `Service ${this.protocol.characteristicUuid} not found`
+        );
       }
 
       this.characteristic = charateristic;
@@ -149,7 +149,7 @@ export class JKBMS implements Device {
       const isMatchedDeviceInRange = await new Promise<boolean>((resolve) => {
         const timeout = setTimeout(() => {
           resolve(false);
-        }, TIMEOUTS.connectPreviousDevice);
+        }, this.protocol.connectPreviousTimeout);
 
         const advertisementReceivedCallback = () => {
           console.log('Previous in range');
@@ -186,7 +186,7 @@ export class JKBMS implements Device {
     const device = await navigator.bluetooth.requestDevice({
       filters: [
         {
-          services: [SERVICE_UUID],
+          services: [this.protocol.serviceUuid],
         },
       ],
     });
@@ -200,50 +200,15 @@ export class JKBMS implements Device {
     }
 
     try {
-      await this.characteristic.startNotifications();
-      await wait(200);
-      await this.sendBluetoothCommand('activate');
-      await this.sendBluetoothCommand('getDeviceInfo');
-      await this.sendBluetoothCommand('getCellData');
-
-      let responseAcc = new Uint8Array();
-
       this.characteristic.addEventListener(
         'characteristicvaluechanged',
-        async (event) => {
-          const value = (event.target as BluetoothRemoteGATTCharacteristic)
-            .value;
-
-          if (value) {
-            console.log(
-              `received ${value.byteLength} bytes`,
-              `total: ${responseAcc.byteLength + value.byteLength}`,
-              `header: ${bufferToHexString(value.buffer).slice(0, 12)}`
-            );
-            responseAcc = new Uint8Array([
-              ...responseAcc,
-              ...new Uint8Array(value.buffer),
-            ]);
-          }
-
-          if (responseAcc.byteLength >= 300) {
-            try {
-              const data = this.decoder?.decode(
-                'getCellData',
-                responseAcc.buffer
-              );
-              if (data) {
-                // @ts-ignore
-                this.callbacks.onDataChange(data);
-              }
-            } catch (e) {
-              //
-            }
-
-            responseAcc = new Uint8Array();
-          }
-        }
+        this.handleNotification.bind(this)
       );
+
+      await this.characteristic.startNotifications();
+      await wait(200);
+      await this.sendCommand(JKBMS_COMMANDS.GET_DEVICE_INFO);
+      await this.sendCommand(JKBMS_COMMANDS.GET_CELL_DATA);
     } catch (error) {
       console.warn('disconnect');
       this.disconnect();
@@ -251,27 +216,195 @@ export class JKBMS implements Device {
     }
   }
 
-  private async sendBluetoothCommand(
-    commandName: keyof typeof JKBMS_COMMANDS
-  ): Promise<void> {
+  private async sendCommand(commandName: JKBMS_COMMANDS): Promise<void> {
     if (!this.characteristic) {
       throw new Error(
         `Device must be connected to send a ${commandName} command`
       );
     }
 
-    const command: HexString = JKBMS_COMMANDS[commandName];
-
-    const payloadBuffer = hexStringToBuffer(command);
+    const command = this.protocol.commands.find(
+      ({ name }) => name === commandName
+    )!;
 
     const timeout = setTimeout(() => {
       throw new Error(`Send command ${command} timeout`);
-    }, TIMEOUTS.writeCharacteristicValue);
+    }, command.timeout);
 
-    await this.characteristic.writeValueWithoutResponse(payloadBuffer);
+    const commandPayload = this.constructCommandPayload(command);
+    console.log('send command', command, commandPayload);
+
+    await this.characteristic.writeValueWithoutResponse(commandPayload.buffer);
 
     clearTimeout(timeout);
 
-    await wait(WRITE_CHARACTERISTIC_DELAY);
+    await wait(command.wait);
+  }
+
+  private constructCommandPayload(
+    command: Required<CommandDefinition>
+  ): Uint8Array {
+    const template = new Uint8Array(20);
+    const commandBuffer = new Uint8Array([
+      ...this.protocol.commandHeader,
+      ...command.payload,
+      ...template,
+    ]).slice(0, template.length);
+
+    const checksum = this.calculateChecksum(commandBuffer);
+
+    console.assert(checksum <= 255);
+
+    commandBuffer[commandBuffer.length - 1] = checksum;
+
+    return commandBuffer;
+  }
+
+  private handleNotification(event: Event): void {
+    console.log('handle notification', event);
+    const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
+
+    if (!value) {
+      return;
+    }
+
+    const valueArray = new Uint8Array(value.buffer);
+    console.log(`received ${value.byteLength} bytes`);
+
+    try {
+      if (this.doesStartWithSegmentHeader(valueArray)) {
+        this.responseBuffer = valueArray;
+      } else {
+        if (this.doesStartWithSegmentHeader(this.responseBuffer)) {
+          this.responseBuffer = new Uint8Array([
+            ...this.responseBuffer,
+            ...valueArray,
+          ]);
+        } else {
+          // throw new Error('Segment header must come first');
+          return;
+        }
+      }
+
+      const segmentType = this.getSegmentType(this.responseBuffer);
+
+      if (!segmentType) {
+        throw new Error('No segment type');
+      }
+
+      const expectedSegments = this.protocol.commands.map(
+        (command) => command.responseSignature[0]
+      );
+
+      if (!expectedSegments.includes(segmentType)) {
+        throw new Error(`segment type ${segmentType} not expected`);
+      }
+
+      const command = this.protocol.commands.find(
+        (command) => command.responseSignature[0] === segmentType
+      )!;
+
+      if (this.isSegmentComplete(this.responseBuffer, command)) {
+        if (!this.isChecksumCorrect(this.responseBuffer)) {
+          // throw new Error('Checksum does not match');
+        }
+
+        try {
+          const decodedData = this.decoder!.decode(
+            command,
+            this.responseBuffer
+          );
+
+          console.log(decodedData);
+
+          this.handleDecodedData(decodedData);
+        } catch (e) {
+          throw new Error('Response data decode failed');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      this.flushResponseBuffer();
+      return;
+    }
+  }
+
+  private doesStartWithSegmentHeader(segment: Uint8Array): boolean {
+    return (
+      segment.byteLength > this.protocol.segmentHeader.byteLength &&
+      this.protocol.segmentHeader.every((value, i) => value === segment[i])
+    );
+  }
+
+  private isSegmentComplete(
+    segment: Uint8Array,
+    command: CommandDefinition
+  ): boolean {
+    if (!this.doesStartWithSegmentHeader(segment)) {
+      return false;
+    }
+
+    const commandResponseLength = command.response.reduce(
+      (sum, dataItem) => (sum += dataItem[0]),
+      0
+    );
+
+    if (segment.length === commandResponseLength) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private isChecksumCorrect(segment: Uint8Array): boolean {
+    const checksum = segment.at(-1);
+
+    const calculatedChecksum = this.calculateChecksum(segment.slice(0, -1));
+
+    if (checksum === calculatedChecksum) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private getSegmentType(segment: Uint8Array): number | null {
+    const segmentType = segment[this.protocol.segmentHeader.length];
+
+    return segmentType ?? null;
+  }
+
+  private calculateChecksum(byteArray: Uint8Array): number {
+    const sum = byteArray.reduce((acc, byte) => (acc += byte), 0);
+
+    const checksum = sum & 0xff;
+
+    return checksum;
+  }
+
+  private flushResponseBuffer(): void {
+    console.log('flushed response buffer');
+    this.responseBuffer = new Uint8Array([]);
+  }
+
+  private handleDecodedData(decodedData: DecodedResponseData): void {
+    const timestamp = new Date().valueOf();
+    const timeSinceLastOne = this.lastPublicData?.timestamp
+      ? timestamp - this.lastPublicData.timestamp
+      : null;
+
+    const publicData: Data = {
+      timestamp,
+      timeSinceLastOne,
+      checksumCorrect: true,
+      deviceInfo: decodedData.deviceInfo,
+      batteryData: decodedData.batteryData,
+    };
+
+    this.lastPublicData = publicData;
+
+    console.log('public data', publicData);
+
+    this.callbacks.onDataChange(publicData);
   }
 }

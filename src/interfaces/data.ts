@@ -65,3 +65,12 @@ export type Data = DeepReadonly<{
     unknownSegments?: UnknowDataSegment[];
   };
 }>;
+
+export type InternalData = Record<
+  string,
+  number | string | ArrayBuffer | Uint8Array
+> & {
+  header?: Uint8Array;
+  responseSignature?: Uint8Array;
+  frameNumber?: number;
+};
