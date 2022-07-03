@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import LogViewer from './components/molecules/LogViewer';
 import { JKBMS } from './devices/jkbms';
-import { useRefFn } from './hooks/useRefFn';
 import { Data } from './interfaces/data';
-import { DeviceIdentificator, DeviceStatus } from './interfaces/device';
+import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
+import { UILog } from './utils/logger';
 
 function App() {
   const [status, setStatus] = useState<DeviceStatus>('disconnected');
   const [data, setData] = useState<Data | null>(null);
-  const { current: device } = useRefFn(
-    () =>
+  const [device, setDevice] = useState<Device | null>(null);
+
+  useEffect(() => {
+    UILog.info('App rendered');
+
+    setDevice(
       new JKBMS({
         onDataChange(newData) {
           setData(newData);
@@ -34,13 +38,14 @@ function App() {
           window.localStorage.removeItem('previousDevice');
         },
       })
-  );
+    );
+  }, []);
 
   return (
     <div
       className='App'
       onClick={() => {
-        device.connect({
+        device?.connect({
           previous:
             JSON.parse(
               window.localStorage.getItem('previousDevice') || 'null'

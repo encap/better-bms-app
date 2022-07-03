@@ -5,7 +5,8 @@ export const LogItemWrapper = styled.p`
   position: relative;
   font-size: 14px;
   white-space: pre-wrap;
-  margin: 4px 0;
+  margin: 2px 0;
+  padding: 2px 2px;
 
   span {
     border-radius: 4px;
@@ -27,7 +28,7 @@ export const ansiColorPalette = {
   3: 'rgb(210, 192, 89)',
   4: '#00A',
   5: '#A0A',
-  6: '#0AA',
+  6: 'rgb(26, 181, 203)',
   7: '#AAA',
   8: '#555',
   9: '#F55',

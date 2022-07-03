@@ -1,6 +1,7 @@
 import { DecodedResponseData, Decoder } from '../interfaces/decoder';
 import { CommandDefinition, ProtocolDefinition } from '../interfaces/protocol';
 import { bufferToHexString } from '../utils/binary';
+import { DecoderLog } from '../utils/logger';
 
 export class ResponseDecoder<T extends string> implements Decoder<T> {
   protocol: ProtocolDefinition<T>;
@@ -13,7 +14,12 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
     command: CommandDefinition,
     responseBuffer: Uint8Array
   ): DecodedResponseData {
-    console.log(bufferToHexString(responseBuffer.buffer));
+    DecoderLog.log(
+      `Decoding ${command.name} data (${responseBuffer.byteLength} bytes)`,
+      { command, responseBuffer }
+    );
+    DecoderLog.debug(bufferToHexString(responseBuffer));
+
     const dataView = new DataView(responseBuffer.buffer);
 
     const temp = Array.from(Array(50)).map(
@@ -29,9 +35,7 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
     const power = dataView.getUint32(voltageIndex + 4, true) / 1000;
     const current = dataView.getInt32(voltageIndex + 8, true) / 1000;
 
-    console.log({ voltage, power, current });
-
-    return {
+    const decodedData: DecodedResponseData = {
       // @ts-ignore
       batteryData: {
         voltage,
@@ -39,5 +43,12 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
         current,
       },
     };
+
+    DecoderLog.log(
+      `Decoding ${command.name} successful. V: ${voltage} SW: ${decodedData.deviceInfo?.firmwareVersion}`,
+      { decodedData }
+    );
+
+    return decodedData;
   }
 }

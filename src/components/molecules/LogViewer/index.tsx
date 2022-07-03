@@ -1,6 +1,6 @@
 import Logger, { ILogLevel } from 'js-logger';
-import { useCallback, useEffect, useState } from 'react';
-import { consoleHandler, GlobalLog } from '../../../utils/logger';
+import { useCallback, useLayoutEffect, useState } from 'react';
+import { consoleHandler, GlobalLog, UILog } from '../../../utils/logger';
 import LogItem from './LogItem';
 import { LogCount, LogViewerContainer, ScrollContainer } from './styles';
 
@@ -15,8 +15,25 @@ const LogViewer = () => {
         const key = (current[current.length - 1]?.[0] || 0) + 1;
         const log = [key, level, message] as LogType;
 
+        if (current.length > 10000) {
+          try {
+            GlobalLog.info(
+              `Clearing browser console to allow garbage collection`,
+              { current }
+            );
+
+            console.clear();
+          } catch (e) {
+            //
+          }
+        }
+
         if (current.length > 500) {
-          return [...current, log].slice(-450);
+          UILog.info(
+            `For performance reasons flushing ${500 - 100} oldest logs`,
+            { current }
+          );
+          return [...current, log].slice(-400);
         }
 
         return [...current, log];
@@ -25,7 +42,9 @@ const LogViewer = () => {
     [setLogs]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    GlobalLog.log('Initializing Log viewer');
+
     Logger.setHandler((originalMessages, context) => {
       const { messages } = consoleHandler(originalMessages, context);
 

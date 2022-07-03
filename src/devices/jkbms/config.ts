@@ -1,15 +1,11 @@
 import { DeepRequired } from 'ts-essentials';
 import { ProtocolDefinition } from '../../interfaces/protocol';
+import { GlobalLog } from '../../utils/logger';
 
 export enum JKBMS_COMMANDS {
   GET_DEVICE_INFO = 'GET_DEVICE_INFO',
   GET_CELL_DATA = 'GET_CELL_DATA',
 }
-
-// export const JKBMS_COMMANDS: Record<Commands, HexString> = {
-//   getDeviceInfo: 'aa 55 90 eb 97 00 00 00 00 00 00 00 00 00 00 00 00 00 00 11',
-//   getCellData: 'aa 55 90 eb 96 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10',
-// };
 
 export const JKBMS_PROTOCOL: DeepRequired<ProtocolDefinition<JKBMS_COMMANDS>> =
   {
@@ -39,3 +35,7 @@ export const JKBMS_PROTOCOL: DeepRequired<ProtocolDefinition<JKBMS_COMMANDS>> =
       },
     ],
   };
+
+GlobalLog.info(`Registered protocol: ${JKBMS_PROTOCOL.name}
+  commands: ${JKBMS_PROTOCOL.commands.map(({ name }) => name).join(', ')}
+`);

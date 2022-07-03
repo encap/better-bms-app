@@ -11,6 +11,8 @@ import {
 } from '../../interfaces/device';
 import { CommandDefinition } from '../../interfaces/protocol';
 import { wait } from '../../utils';
+import { bufferToHexString, uInt8ToHexString } from '../../utils/binary';
+import { DeviceLog } from '../../utils/logger';
 import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
 export class JKBMS implements Device {
@@ -24,7 +26,18 @@ export class JKBMS implements Device {
   private characteristic: BluetoothRemoteGATTCharacteristic | null;
 
   constructor(callbacks: DeviceCallbacks) {
+    DeviceLog.info(`JK BMS initializing`, { callbacks });
     this.protocol = JKBMS_PROTOCOL;
+    DeviceLog.info(
+      `Using protocol ${this.protocol.name}
+         commands: [
+           ${this.protocol.commands.map(({ name }) => name).join(', ')}
+         ]
+      `,
+      {
+        protocol: this.protocol,
+      }
+    );
     this.callbacks = callbacks;
     this.setStatus('disconnected');
     this.deviceIdenticator = null;
@@ -34,9 +47,15 @@ export class JKBMS implements Device {
     this.characteristic = null;
 
     this.flushResponseBuffer();
+
+    DeviceLog.log(`Device initialized`, this);
   }
 
   private setStatus(newStatus: DeviceStatus): void {
+    DeviceLog.log(`Status changed: ${this.status} -> ${newStatus}`, {
+      newStatus,
+      oldStatus: this.status,
+    });
     this.status = newStatus;
     this.callbacks.onStatusChange?.(newStatus);
   }
@@ -44,27 +63,42 @@ export class JKBMS implements Device {
   async connect(
     options: ConnectOptions = {}
   ): Promise<DeviceIdentificator | null> {
+    DeviceLog.log(`Connect procedure started`, { options });
     this.setStatus('scanning');
 
     let device: BluetoothDevice | null = null;
 
     try {
       if (options?.previous) {
+        DeviceLog.info(`Previous device option set ${options.previous.name}`, {
+          previous: options.previous,
+        });
         const previousDevice = await this.tryGetPreviousDevice(
           options.previous
         );
 
         if (previousDevice) {
+          DeviceLog.info(`Using previous device ${previousDevice.name}`, {
+            previousDevice,
+            options,
+          });
           device = previousDevice;
         } else {
           // We can't call requestBluetoothDevice without second user interaction.
           // https://developer.chrome.com/blog/user-activation/
+          DeviceLog.info(`Disconnecting to allow other devices`, {
+            previousDevice,
+          });
           this.setStatus('disconnected');
           return null;
         }
       } else {
+        DeviceLog.info(`Reqesting new device`, { options });
         const userSelectedDevice = await this.requestBluetoothDevice();
-
+        DeviceLog.info(
+          `Using user selected device ${userSelectedDevice.name}`,
+          { userSelectedDevice }
+        );
         device = userSelectedDevice;
       }
     } catch (error) {
@@ -75,23 +109,45 @@ export class JKBMS implements Device {
     }
 
     try {
-      const server = await device.gatt?.connect();
+      DeviceLog.log(`Connecting to device ${device.name}`, { device });
+      const server = await device.gatt?.connect().catch((error) => {
+        console.error(error);
+        throw new Error(`Can't connect to GAAT Server of ${device?.name}`);
+      });
+      DeviceLog.info(`Connected to ${device.name}`, { device, server });
 
       if (!server) {
-        throw new Error(`Can't connect to GAAT Server`);
+        throw new Error(`Can't connect to GAAT Server of ${device.name}`);
       }
 
-      const service = await server?.getPrimaryService(
-        this.protocol.serviceUuid
-      );
+      DeviceLog.info(`Getting service ${this.protocol.serviceUuid}`, {
+        server,
+      });
+      const service = await server
+        ?.getPrimaryService(this.protocol.serviceUuid)
+        .catch((error) => {
+          console.error(error);
+          throw new Error(
+            `Can't get primary service ${this.protocol.serviceUuid}`
+          );
+        });
 
       if (!service) {
         throw new Error(`Service ${this.protocol.serviceUuid} not found`);
       }
 
-      const charateristic = await service?.getCharacteristic(
-        this.protocol.characteristicUuid
+      DeviceLog.info(
+        `Getting characteristic ${this.protocol.characteristicUuid}`,
+        { service }
       );
+      const charateristic = await service
+        ?.getCharacteristic(this.protocol.characteristicUuid)
+        .catch((error) => {
+          console.error(error);
+          throw new Error(
+            `Can't get characteristic ${this.protocol.characteristicUuid}`
+          );
+        });
 
       if (!charateristic) {
         throw new Error(
@@ -100,20 +156,36 @@ export class JKBMS implements Device {
       }
 
       this.characteristic = charateristic;
+      this.setStatus('connected');
+
+      DeviceLog.log(`Device ${device.name} ready for commands`, {
+        device,
+        charateristic,
+      });
 
       this.subscribeToDataNotifications();
-
-      this.setStatus('connected');
 
       const deviceIdenticator: DeviceIdentificator = {
         id: device.id,
         name: device.name || device.id,
       };
 
+      DeviceLog.info(
+        `Returning device identificator ${device.name} ${deviceIdenticator.id}`,
+        { deviceIdenticator }
+      );
+
       this.callbacks.onConnected?.(deviceIdenticator);
 
       return deviceIdenticator;
     } catch (error) {
+      DeviceLog.error(
+        // @ts-ignore
+        error?.message ||
+          `Error connecting and initializing device ${device.name}`,
+        { device, error }
+      );
+      this.disconnect();
       this.callbacks.onRequestDeviceError?.(error as Error);
       return null;
     }
@@ -121,24 +193,41 @@ export class JKBMS implements Device {
 
   async disconnect(): Promise<DeviceIdentificator | null> {
     if (this.status === 'disconnected') {
-      throw new Error('Device already disconnected');
+      DeviceLog.warn(`Device already disconnected`, this);
     }
+
+    // @FIME: disconnect and reset
+
     return this.deviceIdenticator;
   }
 
   async pause(): Promise<void> {
+    DeviceLog.log(
+      `Pause notifications for device ${this.characteristic?.service.device.name}`,
+      { characteristic: this.characteristic }
+    );
     //
   }
 
   private async tryGetPreviousDevice(
     deviceIdenticator: DeviceIdentificator
   ): Promise<BluetoothDevice | null> {
+    DeviceLog.info(`Requesting paired devices for ${location.origin}`, {
+      location,
+    });
     const pairedDevicesForThisOrigin = await navigator.bluetooth.getDevices();
+    DeviceLog.info(
+      `Found ${pairedDevicesForThisOrigin.length} paired devices`,
+      { pairedDevicesForThisOrigin }
+    );
     const matchedDevice = pairedDevicesForThisOrigin?.find(
       (device) => device.id === deviceIdenticator.id
     );
 
     if (matchedDevice) {
+      DeviceLog.info(`Connecting to previous device ${matchedDevice.name}`, {
+        matchedDevice,
+      });
       const abortController = new AbortController();
 
       // Wait for connection.
@@ -146,18 +235,30 @@ export class JKBMS implements Device {
         signal: abortController.signal,
       });
 
+      DeviceLog.info(`Watching for advertisments`, {
+        matchedDevice,
+        abortController,
+      });
+
       const isMatchedDeviceInRange = await new Promise<boolean>((resolve) => {
         const timeout = setTimeout(() => {
+          DeviceLog.warn(
+            `No advertisement received within ${this.protocol.connectPreviousTimeout}ms`
+          );
           resolve(false);
         }, this.protocol.connectPreviousTimeout);
 
-        const advertisementReceivedCallback = () => {
-          console.log('Previous in range');
+        const advertisementReceivedCallback = (
+          event: BluetoothAdvertisingEvent
+        ) => {
+          DeviceLog.info(`Previous devices in range ${event.rssi}rssi`, {
+            event,
+          });
           clearTimeout(timeout);
           resolve(true);
         };
 
-        // FIXME: remove listener after first advertismenet
+        // @FIXME: remove listener after first advertismenet
         matchedDevice.addEventListener(
           'advertisementreceived',
           advertisementReceivedCallback
@@ -167,15 +268,34 @@ export class JKBMS implements Device {
       // unwatchAdvertisements hangs, use abort instead
       // matchedDevice.unwatchAdvertisements();
       abortController.abort();
+      DeviceLog.info(`Stopped watching for advertisements`, {
+        abortController,
+        matchedDevice,
+        isMatchedDeviceInRange,
+      });
 
       if (!isMatchedDeviceInRange) {
+        DeviceLog.warn(`Previous device  ${matchedDevice.name} unavailable`, {
+          matchedDevice,
+          isMatchedDeviceInRange,
+        });
         this.callbacks.onPreviousUnaviable?.(matchedDevice);
 
         return null;
       }
 
+      DeviceLog.log(
+        `Previous device ${matchedDevice.name} ready for connection`,
+        { matchedDevice, isMatchedDeviceInRange }
+      );
+
       return matchedDevice;
     }
+
+    DeviceLog.warn(
+      `Previous device ${deviceIdenticator.name} not paired with this origin`,
+      { deviceIdenticator, matchedDevice }
+    );
 
     this.callbacks.onPreviousUnaviable?.(null);
 
@@ -183,6 +303,10 @@ export class JKBMS implements Device {
   }
 
   private async requestBluetoothDevice(): Promise<BluetoothDevice> {
+    DeviceLog.info(
+      `Scanning for devices with ${this.protocol.serviceUuid} uuid`,
+      { serviceUuid: this.protocol.serviceUuid }
+    );
     const device = await navigator.bluetooth.requestDevice({
       filters: [
         {
@@ -191,113 +315,170 @@ export class JKBMS implements Device {
       ],
     });
 
+    DeviceLog.info(`Got premission to use device ${device.name}`, { device });
+
     return device;
   }
 
   private async subscribeToDataNotifications(): Promise<void> {
     if (!this.characteristic) {
-      throw new Error('Device must be connected to init and listen');
+      DeviceLog.error(`Can't subscribe. Device must be connected first.`);
+      return;
     }
 
     try {
+      DeviceLog.log(`Subscribing for notifications`, {
+        characteristic: this.characteristic,
+      });
       this.characteristic.addEventListener(
         'characteristicvaluechanged',
         this.handleNotification.bind(this)
       );
 
       await this.characteristic.startNotifications();
+      DeviceLog.info(`Listening for notifications`);
       await wait(200);
+      DeviceLog.info(`Sending init commands`);
       await this.sendCommand(JKBMS_COMMANDS.GET_DEVICE_INFO);
       await this.sendCommand(JKBMS_COMMANDS.GET_CELL_DATA);
     } catch (error) {
-      console.warn('disconnect');
+      // @ts-ignore
+      DeviceLog.error(error.message);
+      DeviceLog.error(`Can't start notifications and/or send commands`, {
+        error,
+      });
       this.disconnect();
       this.callbacks.onError?.(error as Error);
     }
   }
 
   private async sendCommand(commandName: JKBMS_COMMANDS): Promise<void> {
+    DeviceLog.info(`Preparing to send command ${commandName}`, this);
     if (!this.characteristic) {
-      throw new Error(
-        `Device must be connected to send a ${commandName} command`
-      );
+      throw new Error(`Device must be connected to send a command`);
     }
 
     const command = this.protocol.commands.find(
       ({ name }) => name === commandName
     )!;
 
+    if (!command) {
+      const msg = `Command ${commandName} does not exist for ${this.protocol.name}`;
+      DeviceLog.error(msg, { commandName, command, protocol: this.protocol });
+
+      throw new Error(msg);
+    }
+
     const timeout = setTimeout(() => {
-      throw new Error(`Send command ${command} timeout`);
+      throw new Error(
+        `Send command ${commandName} took longer than ${command.timeout}ms`
+      );
     }, command.timeout);
 
     const commandPayload = this.constructCommandPayload(command);
-    console.log('send command', command, commandPayload);
 
-    await this.characteristic.writeValueWithoutResponse(commandPayload.buffer);
+    try {
+      DeviceLog.log(
+        `Sending command payload ${commandName} to ${this.characteristic.service.device.name}`,
+        { command, commandPayload }
+      );
+      await this.characteristic.writeValueWithoutResponse(
+        commandPayload.buffer
+      );
+    } catch (error) {
+      console.error(error);
+      const msg = `Sending command ${commandName} failed`;
+      DeviceLog.error(msg, { error, command });
+      throw new Error(msg);
+    }
 
     clearTimeout(timeout);
 
+    DeviceLog.info(`Waiting ${command.wait}ms before ready for next command`, {
+      command,
+    });
     await wait(command.wait);
   }
 
   private constructCommandPayload(
     command: Required<CommandDefinition>
   ): Uint8Array {
+    DeviceLog.info(`Constructing payload for ${command.name}`, { command });
     const template = new Uint8Array(20);
     const commandBuffer = new Uint8Array([
       ...this.protocol.commandHeader,
       ...command.payload,
       ...template,
     ]).slice(0, template.length);
-
-    const checksum = this.calculateChecksum(commandBuffer);
-
-    console.assert(checksum <= 255);
+    DeviceLog.info(
+      `Command pre checksum: ${bufferToHexString(commandBuffer)}`,
+      { commandBuffer }
+    );
+    const checksum = this.calculateChecksum(commandBuffer.slice(0, -1));
 
     commandBuffer[commandBuffer.length - 1] = checksum;
+    DeviceLog.info(
+      `Command with checksum: ${bufferToHexString(commandBuffer)}`,
+      { commandBuffer, checksum }
+    );
 
     return commandBuffer;
   }
 
   private handleNotification(event: Event): void {
-    console.log('handle notification', event);
     const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
 
-    if (!value) {
+    if (!value?.byteLength) {
+      DeviceLog.warn(`Received empty notification. Ignoring`, { value, event });
       return;
     }
 
     const valueArray = new Uint8Array(value.buffer);
-    console.log(`received ${value.byteLength} bytes`);
+
+    DeviceLog.log(
+      // @ts-ignore
+      `Received notification from ${event.target?.service?.device?.name} ${value.byteLength} bytes`,
+      { event, value, responseBuffer: this.responseBuffer, it: this }
+    );
 
     try {
       if (this.doesStartWithSegmentHeader(valueArray)) {
+        DeviceLog.info(`Segment header detected`);
+        this.flushResponseBuffer();
         this.responseBuffer = valueArray;
       } else {
+        // responseBuffer should always start with segment header or have 0 length
         if (this.doesStartWithSegmentHeader(this.responseBuffer)) {
+          DeviceLog.info(
+            `Appending frame to previous segment. Total length ${
+              this.responseBuffer.byteLength + valueArray.byteLength
+            }`,
+            { responseBuffer: this.responseBuffer, valueArray }
+          );
+
           this.responseBuffer = new Uint8Array([
             ...this.responseBuffer,
             ...valueArray,
           ]);
         } else {
-          // throw new Error('Segment header must come first');
+          DeviceLog.warn(
+            `Segment header must come first in the response. Ignoring frame`,
+            { responseBuffer: this.responseBuffer, valueArray }
+          );
           return;
         }
       }
 
       const segmentType = this.getSegmentType(this.responseBuffer);
 
-      if (!segmentType) {
-        throw new Error('No segment type');
-      }
-
       const expectedSegments = this.protocol.commands.map(
         (command) => command.responseSignature[0]
       );
 
       if (!expectedSegments.includes(segmentType)) {
-        throw new Error(`segment type ${segmentType} not expected`);
+        DeviceLog.warn(`Segment type ${uInt8ToHexString(segmentType, '0x')}`);
+
+        return;
       }
 
       const command = this.protocol.commands.find(
@@ -306,33 +487,58 @@ export class JKBMS implements Device {
 
       if (this.isSegmentComplete(this.responseBuffer, command)) {
         if (!this.isChecksumCorrect(this.responseBuffer)) {
-          // throw new Error('Checksum does not match');
+          DeviceLog.warn(`Segment corrupted. Flushing ${command.name}`, {
+            responseBuffer: this.responseBuffer,
+          });
+          this.flushResponseBuffer();
+          return;
         }
 
         try {
+          DeviceLog.info(
+            `Segment complete and valid. Decoding ${command.name}`,
+            {
+              responseBuffer: this.responseBuffer,
+            }
+          );
+
           const decodedData = this.decoder!.decode(
             command,
             this.responseBuffer
           );
 
-          console.log(decodedData);
-
           this.handleDecodedData(decodedData);
-        } catch (e) {
-          throw new Error('Response data decode failed');
+
+          this.flushResponseBuffer();
+        } catch (error) {
+          console.error(error);
+          DeviceLog.error(`${command.name} data decode or handle failed`, {
+            error,
+          });
+          return;
         }
+      } else {
+        DeviceLog.info(`Segment not complete. Waiting for more data`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
+      DeviceLog.error('Unkown Error in handle notification', { error });
       this.flushResponseBuffer();
-      return;
     }
+
+    DeviceLog.info(`Notification handle end`);
   }
 
-  private doesStartWithSegmentHeader(segment: Uint8Array): boolean {
+  private doesStartWithSegmentHeader(buffer: Uint8Array): boolean {
+    DeviceLog.info(
+      `Checking for segment header ${bufferToHexString(
+        this.protocol.segmentHeader
+      )}`,
+      { buffer, header: this.protocol.segmentHeader }
+    );
     return (
-      segment.byteLength > this.protocol.segmentHeader.byteLength &&
-      this.protocol.segmentHeader.every((value, i) => value === segment[i])
+      buffer.byteLength > this.protocol.segmentHeader.byteLength &&
+      this.protocol.segmentHeader.every((value, i) => value === buffer[i])
     );
   }
 
@@ -340,20 +546,50 @@ export class JKBMS implements Device {
     segment: Uint8Array,
     command: CommandDefinition
   ): boolean {
+    DeviceLog.info(
+      `Checking if segment is complete ${bufferToHexString(
+        this.protocol.segmentHeader
+      )}`,
+      { segment, command }
+    );
+
     if (!this.doesStartWithSegmentHeader(segment)) {
+      // This shouldn't happen
+      DeviceLog.warn(`Segment can't be complete without its header`, {
+        segment,
+      });
       return false;
     }
 
-    const commandResponseLength = command.response.reduce(
+    const expectedLength = command.response.reduce(
       (sum, dataItem) => (sum += dataItem[0]),
       0
     );
 
-    if (segment.length === commandResponseLength) {
-      return false;
+    if (segment.length === expectedLength) {
+      DeviceLog.info(`Segment has expected length ${expectedLength} bytes`, {
+        segment,
+        command,
+      });
+      return true;
+    } else if (segment.length > expectedLength) {
+      DeviceLog.warn(
+        `Segment is longer than expected length by ${
+          segment.length - expectedLength
+        }. Proceed with caution`,
+        { segment, expectedLength, command }
+      );
+
+      return true;
     }
 
-    return true;
+    DeviceLog.info(
+      `Segment needs ${
+        expectedLength - segment.length
+      } more bytes to be complete`,
+      { segment, expectedLength, command }
+    );
+    return false;
   }
 
   private isChecksumCorrect(segment: Uint8Array): boolean {
@@ -362,28 +598,52 @@ export class JKBMS implements Device {
     const calculatedChecksum = this.calculateChecksum(segment.slice(0, -1));
 
     if (checksum === calculatedChecksum) {
+      DeviceLog.info(`Checksum correct ${uInt8ToHexString(checksum, '0x')}`);
       return true;
     }
+
+    DeviceLog.warn(
+      `Checksum ${uInt8ToHexString(
+        calculatedChecksum,
+        '0x'
+      )} invalid expected ${uInt8ToHexString(checksum!, '0x')}`
+    );
 
     return false;
   }
 
-  private getSegmentType(segment: Uint8Array): number | null {
+  private getSegmentType(segment: Uint8Array): number {
     const segmentType = segment[this.protocol.segmentHeader.length];
 
-    return segmentType ?? null;
+    DeviceLog.info(
+      `Detected segment type ${uInt8ToHexString(segmentType, '0x')}`
+    );
+
+    return segmentType;
   }
 
   private calculateChecksum(byteArray: Uint8Array): number {
+    DeviceLog.info(`Calculating checksum for ${byteArray.byteLength} bytes`, {
+      byteArray,
+    });
     const sum = byteArray.reduce((acc, byte) => (acc += byte), 0);
 
     const checksum = sum & 0xff;
+
+    console.assert(checksum <= 255);
+    DeviceLog.info(`Calculated checksum: ${uInt8ToHexString(checksum, '0x')}`, {
+      byteArray,
+      checksum,
+    });
 
     return checksum;
   }
 
   private flushResponseBuffer(): void {
-    console.log('flushed response buffer');
+    DeviceLog.info(
+      `Flushing response buffer ${this.responseBuffer?.byteLength ?? 0} bytes`,
+      { responseBuffer: this.responseBuffer }
+    );
     this.responseBuffer = new Uint8Array([]);
   }
 
@@ -392,6 +652,12 @@ export class JKBMS implements Device {
     const timeSinceLastOne = this.lastPublicData?.timestamp
       ? timestamp - this.lastPublicData.timestamp
       : null;
+
+    DeviceLog.info(`Handle decoded data. Last ${timeSinceLastOne} ms ago`, {
+      decodedData,
+      timeSinceLastOne,
+      timestamp: new Date(timestamp),
+    });
 
     const publicData: Data = {
       timestamp,
@@ -403,7 +669,10 @@ export class JKBMS implements Device {
 
     this.lastPublicData = publicData;
 
-    console.log('public data', publicData);
+    DeviceLog.log(
+      `Data ready. V: ${publicData.batteryData?.voltage}. CRC: ${publicData.checksumCorrect}`,
+      { publicData, decodedData, internalData: decodedData.internalData }
+    );
 
     this.callbacks.onDataChange(publicData);
   }

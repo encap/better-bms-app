@@ -1,15 +1,39 @@
 import { HexString } from '../interfaces';
 
-export function hexStringToBuffer(hexString: HexString): ArrayBuffer {
-  return new Int8Array(hexString.split(' ').map((h) => parseInt(h, 16))).buffer;
+type HexPrefixes = '0x' | '\\x' | '' | null | undefined;
+
+type HexSeparators = ' ' | '' | null | undefined;
+
+export function uInt8ToHexString(
+  number: number,
+  prefix: HexPrefixes = ''
+): HexString {
+  return (prefix ?? '') + number.toString(16).padStart(2, '0');
 }
 
-export function bufferToHexString(buffer: ArrayBuffer | undefined): HexString {
+export function hexStringToBuffer(
+  hexString: HexString,
+  separator: HexSeparators = ' '
+): ArrayBuffer {
+  return new Int8Array(
+    hexString.split(separator ?? '').map((h) => parseInt(h, 16))
+  ).buffer;
+}
+
+export function bufferToHexString(
+  buffer: Uint8Array | undefined,
+  separator: HexSeparators = ' ',
+  prefixes: HexPrefixes = '',
+  prefix: HexPrefixes = ''
+): HexString {
   if (!buffer) {
     return '';
   }
 
-  return Array.from(new Uint8Array(buffer))
-    .map((x) => x.toString(16).padStart(2, '0'))
-    .join(' ');
+  return (
+    prefix +
+    Array.from(buffer)
+      .map((uInt8) => uInt8ToHexString(uInt8, prefixes))
+      .join(separator ?? '')
+  );
 }
