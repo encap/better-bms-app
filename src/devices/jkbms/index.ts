@@ -102,6 +102,11 @@ export class JKBMS implements Device {
         device = userSelectedDevice;
       }
     } catch (error) {
+      console.error(error);
+      DeviceLog.error('Request device failed', {
+        options,
+        device,
+      });
       this.setStatus('disconnected');
       this.callbacks.onRequestDeviceError?.(error as Error);
 
