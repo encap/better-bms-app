@@ -7,12 +7,7 @@ export type DeviceIdentificator = DeepReadonly<{
   name: string;
 }>;
 
-export type DeviceStatus =
-  | 'disconnected'
-  | 'scanning'
-  | 'connecting'
-  | 'connected'
-  | 'paused';
+export type DeviceStatus = 'disconnected' | 'scanning' | 'connecting' | 'connected' | 'paused';
 
 export type DeviceCallbacks = {
   onPreviousUnaviable?(device: BluetoothDevice | null): void;

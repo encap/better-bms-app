@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Server } from 'http';
+import { DeepRequired } from 'ts-essentials';
 import { ResponseDecoder } from '../../decoders/responseDecoder';
 import { Data } from '../../interfaces/data';
-import { DecodedResponseData, Decoder } from '../../interfaces/decoder';
+import { DecodedResponseData } from '../../interfaces/decoder';
 import {
   ConnectOptions,
   Device,
@@ -10,30 +10,36 @@ import {
   DeviceIdentificator,
   DeviceStatus,
 } from '../../interfaces/device';
-import { CommandDefinition } from '../../interfaces/protocol';
+import { CommandDefinition, ProtocolSpecification } from '../../interfaces/protocol';
 import { wait } from '../../utils';
 import { bufferToHexString, intToHexString } from '../../utils/binary';
 import { chalk, DeviceLog } from '../../utils/logger';
 import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
 export class JKBMS implements Device {
-  protocol: typeof JKBMS_PROTOCOL;
+  protocol!: DeepRequired<ProtocolSpecification<JKBMS_COMMANDS>>;
   status!: DeviceStatus;
   deviceIdenticator!: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
   lastPublicData!: Data | null;
-  decoder!: Decoder<string>;
+  decoder!: ResponseDecoder<JKBMS_COMMANDS>;
   responseBuffer!: Uint8Array;
   characteristic!: BluetoothRemoteGATTCharacteristic | null;
   bluetoothDevice!: BluetoothDevice | null;
 
   constructor(callbacks: DeviceCallbacks) {
     DeviceLog.info(`JK BMS initializing`, { callbacks });
-    this.protocol = JKBMS_PROTOCOL;
+
+    this.decoder = new ResponseDecoder<JKBMS_COMMANDS>(JKBMS_PROTOCOL);
+    // @ts-ignore
+    this.protocol = this.decoder.getUnpackedProtocol();
+
     DeviceLog.info(
       `Using protocol ${this.protocol.name}
          commands: [
-           ${this.protocol.commands.map(({ name }) => name).join(', ')}
+           ${Object.values(this.protocol.commands)
+             .map(({ name }) => name)
+             .join(', ')}
          ]
       `,
       {
@@ -53,7 +59,6 @@ export class JKBMS implements Device {
     this.setStatus('disconnected');
     this.deviceIdenticator = null;
     this.lastPublicData = null;
-    this.decoder = new ResponseDecoder(this.protocol);
 
     this.characteristic = null;
     this.bluetoothDevice = null;
@@ -365,7 +370,9 @@ export class JKBMS implements Device {
       throw new Error(`Device must be connected to send a command`);
     }
 
-    const command = this.protocol.commands.find(({ name }) => name === commandName)!;
+    const command = this.protocol.getCommand(commandName) as DeepRequired<
+      CommandDefinition<JKBMS_COMMANDS>
+    >;
 
     if (!command) {
       const msg = `Command ${commandName} does not exist for ${this.protocol.name}`;

@@ -8,6 +8,7 @@ import { mockCellDataResponse } from './devices/jkbms/mocks';
 import { Data } from './interfaces/data';
 import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
 import { UILog } from './utils/logger';
+import { unpackCommand } from './utils/unpackProtocol';
 
 function App() {
   const [status, setStatus] = useState<DeviceStatus>('disconnected');
@@ -26,10 +27,7 @@ function App() {
           setStatus(newStatus);
         },
         onConnected(deviceIdentificator) {
-          window.localStorage.setItem(
-            'previousDevice',
-            JSON.stringify(deviceIdentificator)
-          );
+          window.localStorage.setItem('previousDevice', JSON.stringify(deviceIdentificator));
         },
         onError(error) {
           console.error(error);
@@ -47,7 +45,7 @@ function App() {
   useEffect(() => {
     const decoder = new ResponseDecoder(JKBMS_PROTOCOL);
 
-    decoder.decode(JKBMS_PROTOCOL.commands[1], mockCellDataResponse);
+    decoder.decode(unpackCommand(JKBMS_PROTOCOL.commands[1]), mockCellDataResponse);
   }, []);
 
   return (
@@ -57,9 +55,8 @@ function App() {
         if (status === 'disconnected') {
           device?.connect({
             previous:
-              JSON.parse(
-                window.localStorage.getItem('previousDevice') || 'null'
-              ) ?? (undefined as DeviceIdentificator | undefined),
+              JSON.parse(window.localStorage.getItem('previousDevice') || 'null') ??
+              (undefined as DeviceIdentificator | undefined),
           });
         } else {
           device?.disconnect();

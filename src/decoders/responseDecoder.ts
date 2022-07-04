@@ -1,12 +1,22 @@
 import { DecodedResponseData, Decoder } from '../interfaces/decoder';
-import { CommandDefinition, ProtocolDefinition } from '../interfaces/protocol';
+import {
+  CommandDefinition,
+  PackedProtocolSpecification,
+  ProtocolSpecification,
+} from '../interfaces/protocol';
 import { bufferToHexString } from '../utils/binary';
 import { DecodeLog, DeviceLog } from '../utils/logger';
+import { unpackProtocol } from '../utils/unpackProtocol';
 
 export class ResponseDecoder<T extends string> implements Decoder<T> {
-  protocol: ProtocolDefinition<T>;
+  protocol: ProtocolSpecification<T>;
 
-  constructor(protocol: ProtocolDefinition<T>) {
+  constructor(packedProtocol: PackedProtocolSpecification<T>) {
+    DecodeLog.log(`Initializing Response Decoder for protocol ${packedProtocol.name}`, {
+      packedProtocol,
+    });
+    const protocol = unpackProtocol(packedProtocol);
+
     const isValid = this.validateProtocol(protocol);
 
     if (!isValid) {
@@ -20,7 +30,11 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
     this.protocol = protocol;
   }
 
-  validateProtocol(protocol: ProtocolDefinition<T>): boolean {
+  getUnpackedProtocol(): ProtocolSpecification<T> {
+    return this.protocol;
+  }
+
+  validateProtocol(protocol: ProtocolSpecification<T>): boolean {
     DecodeLog.info(`Validating protocol ${protocol.name}`, { protocol });
 
     let isValid = false;
@@ -29,7 +43,7 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
 
       const areCommandsResponseLengthsCorrect = protocol.commands.every((command) => {
         const calculatedLength = command.response.reduce(
-          (byteSum, itemDescription) => (byteSum += itemDescription[0]),
+          (byteSum, itemDescription) => (byteSum += itemDescription.byteLength),
           0
         );
 

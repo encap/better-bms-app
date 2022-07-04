@@ -1,5 +1,9 @@
 import { DeepRequired } from 'ts-essentials';
-import { DataItemDescription, GetterFunction, ProtocolDefinition } from '../../interfaces/protocol';
+import {
+  PackedItemDescription,
+  GetterFunction,
+  PackedProtocolSpecification,
+} from '../../interfaces/protocol';
 import { DecodeLog, GlobalLog } from '../../utils/logger';
 
 export enum JKBMS_COMMANDS {
@@ -7,7 +11,7 @@ export enum JKBMS_COMMANDS {
   GET_CELL_DATA = 'GET_CELL_DATA',
 }
 
-const responseHeaderWithTypeAndCounter: DataItemDescription[] = [
+const responseHeaderWithTypeAndCounter: PackedItemDescription[] = [
   [4, ['internalData', 'header'], 'hex'],
   [1, ['internalData', 'responseSignature'], 'hex'],
   [1, ['internalData', 'frameNumber'], ['Int8']],
@@ -18,7 +22,7 @@ const uptimeDecoder: GetterFunction = () => {
   return 1000 * 60 * 60 * 24;
 };
 
-export const JKBMS_PROTOCOL: DeepRequired<ProtocolDefinition<JKBMS_COMMANDS>> = {
+export const JKBMS_PROTOCOL: DeepRequired<PackedProtocolSpecification<JKBMS_COMMANDS>> = {
   name: 'JK-BMS-02',
   serviceUuid: 0xffe0,
   characteristicUuid: 0xffe1,
@@ -34,7 +38,7 @@ export const JKBMS_PROTOCOL: DeepRequired<ProtocolDefinition<JKBMS_COMMANDS>> = 
       responseLength: 300,
       response: [
         ...responseHeaderWithTypeAndCounter,
-        ...Array.from(Array(24)).map<DataItemDescription>(() => [
+        ...Array.from(Array(24)).map<PackedItemDescription>(() => [
           2,
           ['batteryData', 'voltages'],
           ['Int16', 'littleEndian', 0.001],
@@ -43,7 +47,7 @@ export const JKBMS_PROTOCOL: DeepRequired<ProtocolDefinition<JKBMS_COMMANDS>> = 
         [2, ['batteryData', 'averageCellVoltage'], ['Int16', 'littleEndian', 0.001]],
         [2, ['batteryData', 'cellVoltageDelta'], ['Int16', 'littleEndian', 0.001]],
         [2, ['batteryData', 'balanceCurrent'], ['Int16', 'littleEndian', 0.001]],
-        ...Array.from(Array(24)).map<DataItemDescription>(() => [
+        ...Array.from(Array(24)).map<PackedItemDescription>(() => [
           2,
           ['batteryData', 'resistances'],
           ['Int16', 'littleEndian', 0.001],

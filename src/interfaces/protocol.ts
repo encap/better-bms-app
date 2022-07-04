@@ -1,4 +1,4 @@
-import { StrictExtract } from 'ts-essentials';
+import { StrictExtract, StrictOmit } from 'ts-essentials';
 import { Data, InternalData } from './data';
 
 export type NumericValueTypes =
@@ -12,15 +12,16 @@ export type NumericValueTypes =
   | 'Float64';
 export type Endiannes = 'bigEndian' | 'littleEndian';
 export type Multiplayer = number;
-export type NumericValueProperties =
+export type PackedNumericValueProperties =
   | [NumericValueTypes, Endiannes, Multiplayer]
   | [NumericValueTypes, Endiannes]
   | [StrictExtract<NumericValueTypes, 'Int8' | 'Uint8'>];
 export type TextValueTypes = 'ASCII' | 'UTF-8' | 'hex';
 export type RawValueType = 'raw';
 export type ByteLength = number;
+
 export type DataGroup = StrictExtract<keyof Data, 'batteryData' | 'deviceInfo'> | 'internalData';
-export type GroupAndName =
+export type PackedGroupAndName =
   | [StrictExtract<DataGroup, 'deviceInfo'>, keyof Exclude<Data['deviceInfo'], undefined>]
   | [StrictExtract<DataGroup, 'batteryData'>, keyof Exclude<Data['batteryData'], undefined>]
   | [StrictExtract<DataGroup, 'internalData'>, keyof Exclude<InternalData, undefined>];
@@ -32,12 +33,56 @@ export type GetterFunction = (itemData: {
   buffer: ArrayBuffer;
 }) => any;
 
-export type DataItemDescription =
-  | [ByteLength, GroupAndName, NumericValueProperties]
-  | [ByteLength, GroupAndName, TextValueTypes]
-  | [ByteLength, GroupAndName, RawValueType, GetterFunction | undefined | null];
+export type DataItemTypes = 'numeric' | 'text' | 'raw';
 
-export type ResponseDataDefinition = DataItemDescription[];
+export const PackedItemDescriptionIndexes = {
+  byteLength: 0,
+  groupAndName: 1,
+  valueType: 2,
+  getterFunction: 3,
+};
+
+export type PackedItemDescription =
+  | [ByteLength, PackedGroupAndName, PackedNumericValueProperties]
+  | [ByteLength, PackedGroupAndName, TextValueTypes]
+  | [ByteLength, PackedGroupAndName, RawValueType, GetterFunction | undefined | null];
+
+export type GroupAndName =
+  | {
+      group: StrictExtract<DataGroup, 'deviceInfo'>;
+      name: keyof Exclude<Data['deviceInfo'], undefined>;
+    }
+  | {
+      group: StrictExtract<DataGroup, 'batteryData'>;
+      name: keyof Exclude<Data['batteryData'], undefined>;
+    }
+  | {
+      group: StrictExtract<DataGroup, 'internalData'>;
+      name: keyof Exclude<InternalData, undefined>;
+    };
+
+export type ItemProperties =
+  | {
+      type: StrictExtract<DataItemTypes, 'numeric'>;
+      numberType: NumericValueTypes;
+      endiannes?: Endiannes;
+      options: {
+        multiplayer?: Multiplayer;
+      };
+    }
+  | {
+      type: StrictExtract<DataItemTypes, 'text'>;
+      textEncoding: TextValueTypes;
+    }
+  | {
+      type: StrictExtract<DataItemTypes, 'raw'>;
+      getterFunction: GetterFunction | undefined | null;
+    };
+
+export type ItemDescription = {
+  byteLength: ByteLength;
+} & GroupAndName &
+  ItemProperties;
 
 export type CommandDefinition<T extends string = string> = {
   name: T;
@@ -46,10 +91,17 @@ export type CommandDefinition<T extends string = string> = {
   timeout?: number;
   wait?: number;
   responseLength: number;
-  response: ResponseDataDefinition;
+  response: ItemDescription[];
 };
 
-export interface ProtocolDefinition<T extends string> {
+export type PackedCommandDefinition<T extends string = string> = Omit<
+  CommandDefinition<T>,
+  'response'
+> & {
+  response: PackedItemDescription[];
+};
+
+export interface ProtocolSpecification<T extends string> {
   name: string;
   segmentHeader?: Uint8Array;
   commandHeader?: Uint8Array;
@@ -58,4 +110,12 @@ export interface ProtocolDefinition<T extends string> {
   characteristicUuid?: number;
   connectPreviousTimeout?: number;
   commands: CommandDefinition<T>[];
+  getCommand(commandName: T): CommandDefinition<T>;
 }
+
+export type PackedProtocolSpecification<T extends string> = StrictOmit<
+  ProtocolSpecification<T>,
+  'getCommand' | 'commands'
+> & {
+  commands: PackedCommandDefinition<T>[];
+};

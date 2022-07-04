@@ -17,3 +17,5 @@ export type CellCount = number;
 export type ArrayOfLength<T, N extends number> = T[];
 
 export type HexString = string;
+
+export type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;
