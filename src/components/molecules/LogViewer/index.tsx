@@ -1,5 +1,5 @@
 import Logger, { ILogLevel } from 'js-logger';
-import { useCallback, useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { consoleHandler, GlobalLog, UILog } from '../../../utils/logger';
 import LogItem from './LogItem';
 import { LogCount, LogViewerContainer, ScrollContainer } from './styles';
@@ -7,6 +7,8 @@ import { LogCount, LogViewerContainer, ScrollContainer } from './styles';
 export type LogType = [number, ILogLevel['name'], string];
 
 const LogViewer = () => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(false);
   const [logs, setLogs] = useState<LogType[]>(() => []);
 
   const addLog = useCallback(
@@ -39,7 +41,7 @@ const LogViewer = () => {
         return [...current, log];
       });
     },
-    [setLogs]
+    [setLogs, scrollContainerRef]
   );
 
   useLayoutEffect(() => {
@@ -54,10 +56,30 @@ const LogViewer = () => {
     GlobalLog.log('Log Viewer initialized');
   }, []);
 
+  useLayoutEffect(() => {
+    if (shouldScrollRef.current && scrollContainerRef.current) {
+      console.log('scroll');
+      scrollContainerRef.current.scrollTo(
+        0,
+        scrollContainerRef.current.scrollHeight
+      );
+    }
+  }, [logs]);
+
   return (
     <LogViewerContainer>
       <LogCount>{`Logs: ${logs.length}`}</LogCount>
-      <ScrollContainer>
+      <ScrollContainer
+        ref={scrollContainerRef}
+        onTouchStart={() => (shouldScrollRef.current = false)}
+        onTouchEnd={() =>
+          setTimeout(() => (shouldScrollRef.current = true), 2000)
+        }
+        onMouseDown={() => (shouldScrollRef.current = false)}
+        onMouseUp={() =>
+          setTimeout(() => (shouldScrollRef.current = true), 2000)
+        }
+      >
         {logs.map((log) => (
           <LogItem log={log} key={log[0]} />
         ))}
