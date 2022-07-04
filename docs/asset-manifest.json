@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/better-bms-app/static/css/main.f0415bd5.css",
-    "main.js": "/better-bms-app/static/js/main.7dfa6223.js",
+    "main.css": "/better-bms-app/static/css/main.d676ad20.css",
+    "main.js": "/better-bms-app/static/js/main.41f51ebd.js",
     "static/js/787.93d107df.chunk.js": "/better-bms-app/static/js/787.93d107df.chunk.js",
     "index.html": "/better-bms-app/index.html",
-    "main.f0415bd5.css.map": "/better-bms-app/static/css/main.f0415bd5.css.map",
-    "main.7dfa6223.js.map": "/better-bms-app/static/js/main.7dfa6223.js.map",
+    "main.d676ad20.css.map": "/better-bms-app/static/css/main.d676ad20.css.map",
+    "main.41f51ebd.js.map": "/better-bms-app/static/js/main.41f51ebd.js.map",
     "787.93d107df.chunk.js.map": "/better-bms-app/static/js/787.93d107df.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f0415bd5.css",
-    "static/js/main.7dfa6223.js"
+    "static/css/main.d676ad20.css",
+    "static/js/main.41f51ebd.js"
   ]
 }
