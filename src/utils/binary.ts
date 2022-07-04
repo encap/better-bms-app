@@ -4,7 +4,7 @@ type HexPrefixes = '0x' | '\\x' | '' | null | undefined;
 
 type HexSeparators = ' ' | '' | null | undefined;
 
-export function uInt8ToHexString(
+export function intToHexString(
   number: number,
   prefix: HexPrefixes = ''
 ): HexString {
@@ -33,7 +33,7 @@ export function bufferToHexString(
   return (
     prefix +
     Array.from(buffer)
-      .map((uInt8) => uInt8ToHexString(uInt8, prefixes))
+      .map((uInt8) => intToHexString(uInt8, prefixes))
       .join(separator ?? '')
   );
 }

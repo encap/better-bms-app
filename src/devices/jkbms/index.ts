@@ -12,7 +12,7 @@ import {
 } from '../../interfaces/device';
 import { CommandDefinition } from '../../interfaces/protocol';
 import { wait } from '../../utils';
-import { bufferToHexString, uInt8ToHexString } from '../../utils/binary';
+import { bufferToHexString, intToHexString } from '../../utils/binary';
 import { DeviceLog } from '../../utils/logger';
 import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
@@ -135,24 +135,35 @@ export class JKBMS implements Device {
         throw new Error(`Can't connect to GAAT Server of ${device.name}`);
       }
 
-      DeviceLog.info(`Getting service ${this.protocol.serviceUuid}`, {
-        server,
-      });
+      DeviceLog.info(
+        `Getting service ${intToHexString(this.protocol.serviceUuid, '0x')}`,
+        {
+          server,
+        }
+      );
       const service = await server
         ?.getPrimaryService(this.protocol.serviceUuid)
         .catch((error) => {
           console.error(error);
           throw new Error(
-            `Can't get primary service ${this.protocol.serviceUuid}`
+            `Can't get primary service ${intToHexString(
+              this.protocol.serviceUuid,
+              '0x'
+            )}`
           );
         });
 
       if (!service) {
-        throw new Error(`Service ${this.protocol.serviceUuid} not found`);
+        throw new Error(
+          `Service ${intToHexString(this.protocol.serviceUuid, '0x')} not found`
+        );
       }
 
       DeviceLog.info(
-        `Getting characteristic ${this.protocol.characteristicUuid}`,
+        `Getting characteristic ${intToHexString(
+          this.protocol.characteristicUuid,
+          '0x'
+        )}`,
         { service }
       );
       const charateristic = await service
@@ -506,7 +517,7 @@ export class JKBMS implements Device {
       );
 
       if (!expectedSegments.includes(segmentType)) {
-        DeviceLog.warn(`Segment type ${uInt8ToHexString(segmentType, '0x')}`);
+        DeviceLog.warn(`Segment type ${intToHexString(segmentType, '0x')}`);
 
         return;
       }
@@ -628,15 +639,15 @@ export class JKBMS implements Device {
     const calculatedChecksum = this.calculateChecksum(segment.slice(0, -1));
 
     if (checksum === calculatedChecksum) {
-      DeviceLog.info(`Checksum correct ${uInt8ToHexString(checksum, '0x')}`);
+      DeviceLog.info(`Checksum correct ${intToHexString(checksum, '0x')}`);
       return true;
     }
 
     DeviceLog.warn(
-      `Checksum ${uInt8ToHexString(
+      `Checksum ${intToHexString(
         calculatedChecksum,
         '0x'
-      )} invalid expected ${uInt8ToHexString(checksum!, '0x')}`
+      )} invalid expected ${intToHexString(checksum!, '0x')}`
     );
 
     return false;
@@ -646,7 +657,7 @@ export class JKBMS implements Device {
     const segmentType = segment[this.protocol.segmentHeader.length];
 
     DeviceLog.info(
-      `Detected segment type ${uInt8ToHexString(segmentType, '0x')}`
+      `Detected segment type ${intToHexString(segmentType, '0x')}`
     );
 
     return segmentType;
@@ -661,7 +672,7 @@ export class JKBMS implements Device {
     const checksum = sum & 0xff;
 
     console.assert(checksum <= 255);
-    DeviceLog.info(`Calculated checksum: ${uInt8ToHexString(checksum, '0x')}`, {
+    DeviceLog.info(`Calculated checksum: ${intToHexString(checksum, '0x')}`, {
       byteArray,
       checksum,
     });
