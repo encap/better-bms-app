@@ -1,7 +1,7 @@
 import { DecodedResponseData, Decoder } from '../interfaces/decoder';
 import { CommandDefinition, ProtocolDefinition } from '../interfaces/protocol';
 import { bufferToHexString } from '../utils/binary';
-import { DecoderLog } from '../utils/logger';
+import { DecodeLog } from '../utils/logger';
 
 export class ResponseDecoder<T extends string> implements Decoder<T> {
   protocol: ProtocolDefinition<T>;
@@ -14,11 +14,11 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
     command: CommandDefinition,
     responseBuffer: Uint8Array
   ): DecodedResponseData {
-    DecoderLog.log(
+    DecodeLog.log(
       `Decoding ${command.name} data (${responseBuffer.byteLength} bytes)`,
       { command, responseBuffer }
     );
-    DecoderLog.debug(bufferToHexString(responseBuffer));
+    DecodeLog.debug(bufferToHexString(responseBuffer));
 
     const dataView = new DataView(responseBuffer.buffer);
 
@@ -44,7 +44,7 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
       },
     };
 
-    DecoderLog.log(
+    DecodeLog.log(
       `Decoding ${command.name} successful. V: ${voltage} SW: ${decodedData.deviceInfo?.firmwareVersion}`,
       { decodedData }
     );

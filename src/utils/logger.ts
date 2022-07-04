@@ -71,4 +71,4 @@ const DeviceLog = Logger.get(LOG_SCOPES.DEVICE);
 const DecodeLog = Logger.get(LOG_SCOPES.DECODE);
 const UILog = Logger.get(LOG_SCOPES.UI);
 
-export { DeviceLog, DecodeLog as DecoderLog, UILog, GlobalLog };
+export { DeviceLog, DecodeLog, UILog, GlobalLog };
