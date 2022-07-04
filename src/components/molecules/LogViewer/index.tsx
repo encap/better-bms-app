@@ -19,10 +19,7 @@ const LogViewer = () => {
 
         if (current.length > 10000) {
           try {
-            GlobalLog.info(
-              `Clearing browser console to allow garbage collection`,
-              { current }
-            );
+            GlobalLog.info(`Clearing browser console to allow garbage collection`, { current });
 
             console.clear();
           } catch (e) {
@@ -31,10 +28,7 @@ const LogViewer = () => {
         }
 
         if (current.length > 500) {
-          UILog.info(
-            `For performance reasons flushing ${500 - 100} oldest logs`,
-            { current }
-          );
+          UILog.info(`For performance reasons flushing ${500 - 100} oldest logs`, { current });
           return [...current, log].slice(-400);
         }
 
@@ -58,10 +52,7 @@ const LogViewer = () => {
 
   useLayoutEffect(() => {
     if (shouldScrollRef.current && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo(
-        0,
-        scrollContainerRef.current.scrollHeight
-      );
+      scrollContainerRef.current.scrollTo(0, scrollContainerRef.current.scrollHeight);
     }
   }, [logs]);
 
@@ -71,13 +62,9 @@ const LogViewer = () => {
       <ScrollContainer
         ref={scrollContainerRef}
         onTouchStart={() => (shouldScrollRef.current = false)}
-        onTouchEnd={() =>
-          setTimeout(() => (shouldScrollRef.current = true), 2000)
-        }
+        onTouchEnd={() => setTimeout(() => (shouldScrollRef.current = true), 2000)}
         onMouseDown={() => (shouldScrollRef.current = false)}
-        onMouseUp={() =>
-          setTimeout(() => (shouldScrollRef.current = true), 2000)
-        }
+        onMouseUp={() => setTimeout(() => (shouldScrollRef.current = true), 2000)}
       >
         {logs.map((log) => (
           <LogItem log={log} key={log[0]} />

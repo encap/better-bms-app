@@ -6,7 +6,7 @@
   color: white;
   cursor: pointer;
   font-family: monospace;
-  padding: 10vw 16px 32px;
+  padding: 16px 16px 32px;
   background-color: black;
   min-height: 100%;
 }
@@ -14,4 +14,8 @@
 h1 {
   font-size: 70px;
   margin: 15px 10px;
+}
+
+h2 {
+  font-size: 20px;
 }

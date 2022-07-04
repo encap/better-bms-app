@@ -18,7 +18,7 @@ const responseHeaderWithTypeAndCounter: PackedItemDescription[] = [
 ];
 
 const uptimeDecoder: GetterFunction = () => {
-  DecodeLog.info('Decode uptime');
+  DecodeLog.debug('Decode uptime');
   return 1000 * 60 * 60 * 24;
 };
 

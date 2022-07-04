@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react';
+import classNames from 'classnames';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import LogViewer from './components/molecules/LogViewer';
-import { ResponseDecoder } from './decoders/responseDecoder';
 import { JKBMS } from './devices/jkbms';
-import { JKBMS_PROTOCOL } from './devices/jkbms/config';
-import { mockCellDataResponse } from './devices/jkbms/mocks';
 import { Data } from './interfaces/data';
 import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
+import { CellsGrid, TwoColumnGrid } from './styles';
 import { UILog } from './utils/logger';
-import { unpackCommand } from './utils/unpackProtocol';
 
 function App() {
   const [status, setStatus] = useState<DeviceStatus>('disconnected');
@@ -21,7 +19,21 @@ function App() {
     setDevice(
       new JKBMS({
         onDataChange(newData) {
-          setData(newData);
+          // @ts-ingore
+          setData(
+            (current) =>
+              ({
+                ...current,
+                batteryData: {
+                  ...current?.batteryData,
+                  ...newData.batteryData,
+                },
+                deviceInfo: {
+                  ...current?.deviceInfo,
+                  ...newData.deviceInfo,
+                },
+              } as Data)
+          );
         },
         onStatusChange(newStatus) {
           setStatus(newStatus);
@@ -42,11 +54,15 @@ function App() {
     );
   }, []);
 
-  useEffect(() => {
-    const decoder = new ResponseDecoder(JKBMS_PROTOCOL);
-
-    decoder.decode(unpackCommand(JKBMS_PROTOCOL.commands[1]), mockCellDataResponse);
-  }, []);
+  const lowestVol = useMemo(
+    () =>
+      data?.batteryData?.voltages && Math.min(...data.batteryData.voltages.filter((v) => v !== 0)),
+    [data]
+  );
+  const highestVol = useMemo(
+    () => data?.batteryData?.voltages && Math.max(...data.batteryData.voltages),
+    [data]
+  );
 
   return (
     <div
@@ -67,6 +83,11 @@ function App() {
 
       {data && data.batteryData && (
         <>
+          <h2>
+            {data.deviceInfo?.model} {'hw'}
+            {data.deviceInfo?.hardwareVersion}
+          </h2>
+
           <h1>
             {String(data.batteryData.voltage?.toFixed(5))?.slice(0, 6)}
             {'V'}
@@ -76,7 +97,51 @@ function App() {
             <br />
             {String(data.batteryData.power?.toFixed(5))?.slice(0, 6)}
             {'W'}
+            <br />
+            {String(data.batteryData.remainingCapacity?.toFixed(2))?.slice(0, 5)}
+            {'Ah'}
           </h1>
+
+          <TwoColumnGrid>
+            <label>
+              {'tempControll'}
+              {': '}
+            </label>
+            <span>{data?.batteryData?.temperatureProbes?.[0] ?? '-'}</span>
+            <label>
+              {'tempPositive'}
+              {': '}
+            </label>
+            <span>{data?.batteryData?.temperatureProbes?.[1] ?? '-'}</span>
+
+            {Object.entries(data?.batteryData || {})
+              .filter(([, value]) => typeof value === 'number')
+              // @ts-ignore
+              .map(([name, value]: [string, number]) => (
+                <React.Fragment key={name}>
+                  <label>
+                    {name.slice(0, 14)}
+                    {': '}
+                  </label>
+                  <span>{value ?? '-'}</span>
+                </React.Fragment>
+              ))}
+          </TwoColumnGrid>
+
+          <CellsGrid>
+            {data.batteryData?.voltages?.map((voltage, i) => (
+              <span
+                key={i}
+                className={classNames(
+                  lowestVol !== highestVol &&
+                    voltage !== 0 &&
+                    (voltage === lowestVol ? 'lowest' : voltage === highestVol ? 'highest' : '')
+                )}
+              >{`${String(i).padStart(2, '0')}: ${
+                voltage === 0 ? '----- ' : voltage.toFixed(3)
+              }`}</span>
+            ))}
+          </CellsGrid>
         </>
       )}
 
