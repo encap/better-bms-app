@@ -30,7 +30,7 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
         ) / 1000
     );
 
-    const voltageIndex = 110 + temp.findIndex((v) => v > 75 && v < 84);
+    const voltageIndex = 110 + temp.findIndex((v) => v > 60 && v < 84);
     const voltage = dataView.getUint32(voltageIndex, true) / 1000;
     const power = dataView.getUint32(voltageIndex + 4, true) / 1000;
     const current = dataView.getInt32(voltageIndex + 8, true) / 1000;

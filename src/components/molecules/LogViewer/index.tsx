@@ -8,7 +8,7 @@ export type LogType = [number, ILogLevel['name'], string];
 
 const LogViewer = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const shouldScrollRef = useRef(false);
+  const shouldScrollRef = useRef(true);
   const [logs, setLogs] = useState<LogType[]>(() => []);
 
   const addLog = useCallback(
@@ -58,7 +58,6 @@ const LogViewer = () => {
 
   useLayoutEffect(() => {
     if (shouldScrollRef.current && scrollContainerRef.current) {
-      console.log('scroll');
       scrollContainerRef.current.scrollTo(
         0,
         scrollContainerRef.current.scrollHeight

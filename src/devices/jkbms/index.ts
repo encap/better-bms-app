@@ -13,7 +13,7 @@ import {
 import { CommandDefinition } from '../../interfaces/protocol';
 import { wait } from '../../utils';
 import { bufferToHexString, intToHexString } from '../../utils/binary';
-import { DeviceLog } from '../../utils/logger';
+import { chalk, DeviceLog } from '../../utils/logger';
 import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
 export class JKBMS implements Device {
@@ -79,7 +79,10 @@ export class JKBMS implements Device {
     let device: BluetoothDevice | null = null;
 
     try {
-      if (options?.previous) {
+      if (
+        options?.previous &&
+        navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)
+      ) {
         DeviceLog.info(`Previous device option set ${options.previous.name}`, {
           previous: options.previous,
         });
@@ -377,11 +380,12 @@ export class JKBMS implements Device {
       );
 
       await this.characteristic.startNotifications();
-      DeviceLog.info(`Listening for notifications`);
       await wait(200);
-      DeviceLog.info(`Sending init commands`);
-      await this.sendCommand(JKBMS_COMMANDS.GET_DEVICE_INFO);
       await this.sendCommand(JKBMS_COMMANDS.GET_CELL_DATA);
+      DeviceLog.info(`Listening for cell data notifications`);
+      DeviceLog.info(`Queuing Get device info`);
+      await wait(500);
+      await this.sendCommand(JKBMS_COMMANDS.GET_DEVICE_INFO);
     } catch (error) {
       // @ts-ignore
       DeviceLog.error(error.message);
@@ -477,8 +481,10 @@ export class JKBMS implements Device {
     const valueArray = new Uint8Array(value.buffer);
 
     DeviceLog.log(
-      // @ts-ignore
-      `Received notification from ${event.target?.service?.device?.name} ${value.byteLength} bytes`,
+      chalk.bgCyan.black(
+        // @ts-ignore
+        ` Received notification from ${event.target?.service?.device?.name} (${value.byteLength} bytes) `
+      ),
       { event, value, responseBuffer: this.responseBuffer, it: this }
     );
 
@@ -587,12 +593,7 @@ export class JKBMS implements Device {
     segment: Uint8Array,
     command: CommandDefinition
   ): boolean {
-    DeviceLog.info(
-      `Checking if segment is complete ${bufferToHexString(
-        this.protocol.segmentHeader
-      )}`,
-      { segment, command }
-    );
+    DeviceLog.info(`Checking if segment is complete`, { segment, command });
 
     if (!this.doesStartWithSegmentHeader(segment)) {
       // This shouldn't happen

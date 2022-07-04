@@ -2,7 +2,7 @@ import { ChalkInstance, Chalk } from 'chalk';
 import dayjs from 'dayjs';
 import Logger, { ILogHandler } from 'js-logger';
 
-const chalk = new Chalk({
+export const chalk = new Chalk({
   level: 1,
 });
 
