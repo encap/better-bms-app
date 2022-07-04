@@ -12,22 +12,19 @@ export type NumericValueTypes =
   | 'Float64';
 export type Endiannes = 'bigEndian' | 'littleEndian';
 export type Multiplayer = number;
-export type NumericValueProperties = [
-  NumericValueTypes,
-  Endiannes,
-  Multiplayer
-];
-export type TextValueTypes = 'ASCII' | 'UTF-8' | 'Hex';
+export type NumericValueProperties =
+  | [NumericValueTypes, Endiannes, Multiplayer]
+  | [NumericValueTypes, Endiannes]
+  | [StrictExtract<NumericValueTypes, 'Int8' | 'Uint8'>];
+export type TextValueTypes = 'ASCII' | 'UTF-8' | 'hex';
 export type RawValueType = 'raw';
 export type ByteLength = number;
-export type DataGroup =
-  | StrictExtract<keyof Data, 'batteryData' | 'deviceInfo'>
-  | 'internalData';
-export type Name =
-  | keyof Exclude<Data['deviceInfo'], undefined>
-  | keyof Exclude<Data['batteryData'], undefined>
-  | keyof Exclude<InternalData, undefined>;
-export type GroupAndName = [DataGroup, Name];
+export type DataGroup = StrictExtract<keyof Data, 'batteryData' | 'deviceInfo'> | 'internalData';
+export type GroupAndName =
+  | [StrictExtract<DataGroup, 'deviceInfo'>, keyof Exclude<Data['deviceInfo'], undefined>]
+  | [StrictExtract<DataGroup, 'batteryData'>, keyof Exclude<Data['batteryData'], undefined>]
+  | [StrictExtract<DataGroup, 'internalData'>, keyof Exclude<InternalData, undefined>];
+
 export type GetterFunction = (itemData: {
   itemBuffer: ArrayBuffer;
   length: ByteLength;
@@ -38,7 +35,7 @@ export type GetterFunction = (itemData: {
 export type DataItemDescription =
   | [ByteLength, GroupAndName, NumericValueProperties]
   | [ByteLength, GroupAndName, TextValueTypes]
-  | [ByteLength, GroupAndName, RawValueType, GetterFunction | undefined];
+  | [ByteLength, GroupAndName, RawValueType, GetterFunction | undefined | null];
 
 export type ResponseDataDefinition = DataItemDescription[];
 
@@ -48,6 +45,7 @@ export type CommandDefinition<T extends string = string> = {
   responseSignature?: Uint8Array;
   timeout?: number;
   wait?: number;
+  responseLength: number;
   response: ResponseDataDefinition;
 };
 

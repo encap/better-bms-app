@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import LogViewer from './components/molecules/LogViewer';
+import { ResponseDecoder } from './decoders/responseDecoder';
 import { JKBMS } from './devices/jkbms';
+import { JKBMS_PROTOCOL } from './devices/jkbms/config';
+import { mockCellDataResponse } from './devices/jkbms/mocks';
 import { Data } from './interfaces/data';
 import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
 import { UILog } from './utils/logger';
@@ -39,6 +42,12 @@ function App() {
         },
       })
     );
+  }, []);
+
+  useEffect(() => {
+    const decoder = new ResponseDecoder(JKBMS_PROTOCOL);
+
+    decoder.decode(JKBMS_PROTOCOL.commands[1], mockCellDataResponse);
   }, []);
 
   return (

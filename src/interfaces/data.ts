@@ -1,5 +1,5 @@
 import { DeepReadonly } from 'ts-essentials';
-import { ArrayOfLength, CellChemistry, CellCount, Units } from '.';
+import { ArrayOfLength, CellChemistry, CellCount, HexString, Units } from '.';
 
 export type UnknowDataSegment = DeepReadonly<{
   offset: number;
@@ -41,6 +41,7 @@ export type Data = DeepReadonly<{
     averageCellVoltage: Units['volts'];
     minVoltage: Units['volts'];
     maxVoltage: Units['volts'];
+    cellVoltageDelta: Units['volts'];
     remainingCapacity?: Units['ampHours'];
     nominalCapacity?: Units['ampHours'];
     // Total energy used (fractional cycleCount * nominalCapacity)
@@ -51,8 +52,7 @@ export type Data = DeepReadonly<{
     resistances?: ArrayOfLength<Units['ohms'], CellCount>;
     avarageCellResistance?: Units['ohms'];
     //  Negative = discharge
-    balanceCurrents?: ArrayOfLength<Units['amps'], CellCount>;
-    avarageBalanceCurrent?: Units['amps'];
+    balanceCurrent?: Units['amps'];
     // External probes placed near the cells
     temperatureProbes?: Units['degreesCelsius'][];
     avarageTemperature?: Units['degreesCelsius'];
@@ -66,11 +66,8 @@ export type Data = DeepReadonly<{
   };
 }>;
 
-export type InternalData = Record<
-  string,
-  number | string | ArrayBuffer | Uint8Array
-> & {
-  header?: Uint8Array;
-  responseSignature?: Uint8Array;
+export type InternalData = Record<string, number | string | ArrayBuffer | Uint8Array> & {
+  header?: Uint8Array | HexString;
+  responseSignature?: Uint8Array | HexString;
   frameNumber?: number;
 };

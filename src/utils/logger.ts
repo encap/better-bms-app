@@ -57,18 +57,20 @@ export const consoleHandler = (
   };
 };
 
-export function setupLogger() {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  Logger.useDefaults();
-
-  Logger.setHandler(consoleHandler);
-
-  Logger.info('Logger ready');
-}
-
 const GlobalLog = Logger.get(LOG_SCOPES.GLOBAL);
 const DeviceLog = Logger.get(LOG_SCOPES.DEVICE);
 const DecodeLog = Logger.get(LOG_SCOPES.DECODE);
 const UILog = Logger.get(LOG_SCOPES.UI);
 
 export { DeviceLog, DecodeLog, UILog, GlobalLog };
+
+export function setupLogger() {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  Logger.useDefaults();
+
+  Logger.setHandler(consoleHandler);
+
+  DeviceLog.setLevel(Logger.WARN);
+
+  Logger.info('Logger ready');
+}

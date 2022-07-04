@@ -70,25 +70,18 @@ export class JKBMS implements Device {
     this.callbacks.onStatusChange?.(newStatus);
   }
 
-  async connect(
-    options: ConnectOptions = {}
-  ): Promise<DeviceIdentificator | null> {
+  async connect(options: ConnectOptions = {}): Promise<DeviceIdentificator | null> {
     DeviceLog.log(`Connect procedure started`, { options });
     this.setStatus('scanning');
 
     let device: BluetoothDevice | null = null;
 
     try {
-      if (
-        options?.previous &&
-        navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)
-      ) {
+      if (options?.previous && navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
         DeviceLog.info(`Previous device option set ${options.previous.name}`, {
           previous: options.previous,
         });
-        const previousDevice = await this.tryGetPreviousDevice(
-          options.previous
-        );
+        const previousDevice = await this.tryGetPreviousDevice(options.previous);
 
         if (previousDevice) {
           DeviceLog.info(`Using previous device ${previousDevice.name}`, {
@@ -108,10 +101,9 @@ export class JKBMS implements Device {
       } else {
         DeviceLog.info(`Reqesting new device`, { options });
         const userSelectedDevice = await this.requestBluetoothDevice();
-        DeviceLog.info(
-          `Using user selected device ${userSelectedDevice.name}`,
-          { userSelectedDevice }
-        );
+        DeviceLog.info(`Using user selected device ${userSelectedDevice.name}`, {
+          userSelectedDevice,
+        });
         device = userSelectedDevice;
       }
     } catch (error) {
@@ -138,50 +130,33 @@ export class JKBMS implements Device {
         throw new Error(`Can't connect to GAAT Server of ${device.name}`);
       }
 
-      DeviceLog.info(
-        `Getting service ${intToHexString(this.protocol.serviceUuid, '0x')}`,
-        {
-          server,
-        }
-      );
-      const service = await server
-        ?.getPrimaryService(this.protocol.serviceUuid)
-        .catch((error) => {
-          console.error(error);
-          throw new Error(
-            `Can't get primary service ${intToHexString(
-              this.protocol.serviceUuid,
-              '0x'
-            )}`
-          );
-        });
+      DeviceLog.info(`Getting service ${intToHexString(this.protocol.serviceUuid, '0x')}`, {
+        server,
+      });
+      const service = await server?.getPrimaryService(this.protocol.serviceUuid).catch((error) => {
+        console.error(error);
+        throw new Error(
+          `Can't get primary service ${intToHexString(this.protocol.serviceUuid, '0x')}`
+        );
+      });
 
       if (!service) {
-        throw new Error(
-          `Service ${intToHexString(this.protocol.serviceUuid, '0x')} not found`
-        );
+        throw new Error(`Service ${intToHexString(this.protocol.serviceUuid, '0x')} not found`);
       }
 
       DeviceLog.info(
-        `Getting characteristic ${intToHexString(
-          this.protocol.characteristicUuid,
-          '0x'
-        )}`,
+        `Getting characteristic ${intToHexString(this.protocol.characteristicUuid, '0x')}`,
         { service }
       );
       const charateristic = await service
         ?.getCharacteristic(this.protocol.characteristicUuid)
         .catch((error) => {
           console.error(error);
-          throw new Error(
-            `Can't get characteristic ${this.protocol.characteristicUuid}`
-          );
+          throw new Error(`Can't get characteristic ${this.protocol.characteristicUuid}`);
         });
 
       if (!charateristic) {
-        throw new Error(
-          `Service ${this.protocol.characteristicUuid} not found`
-        );
+        throw new Error(`Service ${this.protocol.characteristicUuid} not found`);
       }
 
       this.characteristic = charateristic;
@@ -200,10 +175,9 @@ export class JKBMS implements Device {
         name: device.name || device.id,
       };
 
-      DeviceLog.info(
-        `Returning device identificator ${device.name} ${deviceIdenticator.id}`,
-        { deviceIdenticator }
-      );
+      DeviceLog.info(`Returning device identificator ${device.name} ${deviceIdenticator.id}`, {
+        deviceIdenticator,
+      });
 
       this.callbacks.onConnected?.(deviceIdenticator);
 
@@ -211,8 +185,7 @@ export class JKBMS implements Device {
     } catch (error) {
       DeviceLog.error(
         // @ts-ignore
-        error?.message ||
-          `Error connecting and initializing device ${device.name}`,
+        error?.message || `Error connecting and initializing device ${device.name}`,
         { device, error }
       );
       this.disconnect();
@@ -229,10 +202,7 @@ export class JKBMS implements Device {
     }
 
     try {
-      DeviceLog.log(
-        `Trying to disconnet device ${this.bluetoothDevice.name}`,
-        this
-      );
+      DeviceLog.log(`Trying to disconnet device ${this.bluetoothDevice.name}`, this);
       this.characteristic?.stopNotifications();
       await wait(100);
       this.bluetoothDevice.gatt?.disconnect();
@@ -246,10 +216,9 @@ export class JKBMS implements Device {
   }
 
   async pause(): Promise<void> {
-    DeviceLog.log(
-      `Pause notifications for device ${this.characteristic?.service.device.name}`,
-      { characteristic: this.characteristic }
-    );
+    DeviceLog.log(`Pause notifications for device ${this.characteristic?.service.device.name}`, {
+      characteristic: this.characteristic,
+    });
     //
   }
 
@@ -260,10 +229,9 @@ export class JKBMS implements Device {
       location,
     });
     const pairedDevicesForThisOrigin = await navigator.bluetooth.getDevices();
-    DeviceLog.info(
-      `Found ${pairedDevicesForThisOrigin.length} paired devices`,
-      { pairedDevicesForThisOrigin }
-    );
+    DeviceLog.info(`Found ${pairedDevicesForThisOrigin.length} paired devices`, {
+      pairedDevicesForThisOrigin,
+    });
     const matchedDevice = pairedDevicesForThisOrigin?.find(
       (device) => device.id === deviceIdenticator.id
     );
@@ -292,9 +260,7 @@ export class JKBMS implements Device {
           resolve(false);
         }, this.protocol.connectPreviousTimeout);
 
-        const advertisementReceivedCallback = (
-          event: BluetoothAdvertisingEvent
-        ) => {
+        const advertisementReceivedCallback = (event: BluetoothAdvertisingEvent) => {
           DeviceLog.info(`Previous devices in range ${event.rssi}rssi`, {
             event,
           });
@@ -303,10 +269,7 @@ export class JKBMS implements Device {
         };
 
         // @FIXME: remove listener after first advertismenet
-        matchedDevice.addEventListener(
-          'advertisementreceived',
-          advertisementReceivedCallback
-        );
+        matchedDevice.addEventListener('advertisementreceived', advertisementReceivedCallback);
       });
 
       // unwatchAdvertisements hangs, use abort instead
@@ -328,18 +291,18 @@ export class JKBMS implements Device {
         return null;
       }
 
-      DeviceLog.log(
-        `Previous device ${matchedDevice.name} ready for connection`,
-        { matchedDevice, isMatchedDeviceInRange }
-      );
+      DeviceLog.log(`Previous device ${matchedDevice.name} ready for connection`, {
+        matchedDevice,
+        isMatchedDeviceInRange,
+      });
 
       return matchedDevice;
     }
 
-    DeviceLog.warn(
-      `Previous device ${deviceIdenticator.name} not paired with this origin`,
-      { deviceIdenticator, matchedDevice }
-    );
+    DeviceLog.warn(`Previous device ${deviceIdenticator.name} not paired with this origin`, {
+      deviceIdenticator,
+      matchedDevice,
+    });
 
     this.callbacks.onPreviousUnaviable?.(null);
 
@@ -347,10 +310,9 @@ export class JKBMS implements Device {
   }
 
   private async requestBluetoothDevice(): Promise<BluetoothDevice> {
-    DeviceLog.info(
-      `Scanning for devices with ${this.protocol.serviceUuid} uuid`,
-      { serviceUuid: this.protocol.serviceUuid }
-    );
+    DeviceLog.info(`Scanning for devices with ${this.protocol.serviceUuid} uuid`, {
+      serviceUuid: this.protocol.serviceUuid,
+    });
     const device = await navigator.bluetooth.requestDevice({
       filters: [
         {
@@ -403,9 +365,7 @@ export class JKBMS implements Device {
       throw new Error(`Device must be connected to send a command`);
     }
 
-    const command = this.protocol.commands.find(
-      ({ name }) => name === commandName
-    )!;
+    const command = this.protocol.commands.find(({ name }) => name === commandName)!;
 
     if (!command) {
       const msg = `Command ${commandName} does not exist for ${this.protocol.name}`;
@@ -415,9 +375,7 @@ export class JKBMS implements Device {
     }
 
     const timeout = setTimeout(() => {
-      throw new Error(
-        `Send command ${commandName} took longer than ${command.timeout}ms`
-      );
+      throw new Error(`Send command ${commandName} took longer than ${command.timeout}ms`);
     }, command.timeout);
 
     const commandPayload = this.constructCommandPayload(command);
@@ -427,9 +385,7 @@ export class JKBMS implements Device {
         `Sending command payload ${commandName} to ${this.characteristic.service.device.name}`,
         { command, commandPayload }
       );
-      await this.characteristic.writeValueWithoutResponse(
-        commandPayload.buffer
-      );
+      await this.characteristic.writeValueWithoutResponse(commandPayload.buffer);
     } catch (error) {
       console.error(error);
       const msg = `Sending command ${commandName} failed`;
@@ -445,9 +401,7 @@ export class JKBMS implements Device {
     await wait(command.wait);
   }
 
-  private constructCommandPayload(
-    command: Required<CommandDefinition>
-  ): Uint8Array {
+  private constructCommandPayload(command: Required<CommandDefinition>): Uint8Array {
     DeviceLog.info(`Constructing payload for ${command.name}`, { command });
     const template = new Uint8Array(20);
     const commandBuffer = new Uint8Array([
@@ -455,17 +409,14 @@ export class JKBMS implements Device {
       ...command.payload,
       ...template,
     ]).slice(0, template.length);
-    DeviceLog.info(
-      `Command pre checksum: ${bufferToHexString(commandBuffer)}`,
-      { commandBuffer }
-    );
+    DeviceLog.info(`Command pre checksum: ${bufferToHexString(commandBuffer)}`, { commandBuffer });
     const checksum = this.calculateChecksum(commandBuffer.slice(0, -1));
 
     commandBuffer[commandBuffer.length - 1] = checksum;
-    DeviceLog.info(
-      `Command with checksum: ${bufferToHexString(commandBuffer)}`,
-      { commandBuffer, checksum }
-    );
+    DeviceLog.info(`Command with checksum: ${bufferToHexString(commandBuffer)}`, {
+      commandBuffer,
+      checksum,
+    });
 
     return commandBuffer;
   }
@@ -503,15 +454,12 @@ export class JKBMS implements Device {
             { responseBuffer: this.responseBuffer, valueArray }
           );
 
-          this.responseBuffer = new Uint8Array([
-            ...this.responseBuffer,
-            ...valueArray,
-          ]);
+          this.responseBuffer = new Uint8Array([...this.responseBuffer, ...valueArray]);
         } else {
-          DeviceLog.warn(
-            `Segment header must come first in the response. Ignoring frame`,
-            { responseBuffer: this.responseBuffer, valueArray }
-          );
+          DeviceLog.warn(`Segment header must come first in the response. Ignoring frame`, {
+            responseBuffer: this.responseBuffer,
+            valueArray,
+          });
           return;
         }
       }
@@ -523,7 +471,7 @@ export class JKBMS implements Device {
       );
 
       if (!expectedSegments.includes(segmentType)) {
-        DeviceLog.warn(`Segment type ${intToHexString(segmentType, '0x')}`);
+        DeviceLog.warn(`Unexpected segment type ${intToHexString(segmentType, '0x')}`);
 
         return;
       }
@@ -542,17 +490,11 @@ export class JKBMS implements Device {
         }
 
         try {
-          DeviceLog.info(
-            `Segment complete and valid. Decoding ${command.name}`,
-            {
-              responseBuffer: this.responseBuffer,
-            }
-          );
+          DeviceLog.info(`Segment complete and valid. Decoding ${command.name}`, {
+            responseBuffer: this.responseBuffer,
+          });
 
-          const decodedData = this.decoder!.decode(
-            command,
-            this.responseBuffer
-          );
+          const decodedData = this.decoder!.decode(command, this.responseBuffer);
 
           this.handleDecodedData(decodedData);
 
@@ -578,9 +520,7 @@ export class JKBMS implements Device {
 
   private doesStartWithSegmentHeader(buffer: Uint8Array): boolean {
     DeviceLog.info(
-      `Checking for segment header ${bufferToHexString(
-        this.protocol.segmentHeader
-      )}`,
+      `Checking for segment header ${bufferToHexString(this.protocol.segmentHeader)}`,
       { buffer, header: this.protocol.segmentHeader }
     );
     return (
@@ -589,10 +529,7 @@ export class JKBMS implements Device {
     );
   }
 
-  private isSegmentComplete(
-    segment: Uint8Array,
-    command: CommandDefinition
-  ): boolean {
+  private isSegmentComplete(segment: Uint8Array, command: CommandDefinition): boolean {
     DeviceLog.info(`Checking if segment is complete`, { segment, command });
 
     if (!this.doesStartWithSegmentHeader(segment)) {
@@ -603,33 +540,26 @@ export class JKBMS implements Device {
       return false;
     }
 
-    const expectedLength = command.response.reduce(
-      (sum, dataItem) => (sum += dataItem[0]),
-      0
-    );
-
-    if (segment.length === expectedLength) {
-      DeviceLog.info(`Segment has expected length ${expectedLength} bytes`, {
+    if (segment.length === command.responseLength) {
+      DeviceLog.info(`Segment has expected length ${command.responseLength} bytes`, {
         segment,
         command,
       });
       return true;
-    } else if (segment.length > expectedLength) {
+    } else if (segment.length > command.responseLength) {
       DeviceLog.warn(
         `Segment is longer than expected length by ${
-          segment.length - expectedLength
+          segment.length - command.responseLength
         }. Proceed with caution`,
-        { segment, expectedLength, command }
+        { segment, command }
       );
 
       return true;
     }
 
     DeviceLog.info(
-      `Segment needs ${
-        expectedLength - segment.length
-      } more bytes to be complete`,
-      { segment, expectedLength, command }
+      `Segment needs ${command.responseLength - segment.length} more bytes to be complete`,
+      { segment, command }
     );
     return false;
   }
@@ -645,10 +575,10 @@ export class JKBMS implements Device {
     }
 
     DeviceLog.warn(
-      `Checksum ${intToHexString(
-        calculatedChecksum,
+      `Checksum ${intToHexString(calculatedChecksum, '0x')} invalid expected ${intToHexString(
+        checksum!,
         '0x'
-      )} invalid expected ${intToHexString(checksum!, '0x')}`
+      )}`
     );
 
     return false;
@@ -657,9 +587,7 @@ export class JKBMS implements Device {
   private getSegmentType(segment: Uint8Array): number {
     const segmentType = segment[this.protocol.segmentHeader.length];
 
-    DeviceLog.info(
-      `Detected segment type ${intToHexString(segmentType, '0x')}`
-    );
+    DeviceLog.info(`Detected segment type ${intToHexString(segmentType, '0x')}`);
 
     return segmentType;
   }
@@ -682,10 +610,9 @@ export class JKBMS implements Device {
   }
 
   private flushResponseBuffer(): void {
-    DeviceLog.info(
-      `Flushing response buffer ${this.responseBuffer?.byteLength ?? 0} bytes`,
-      { responseBuffer: this.responseBuffer }
-    );
+    DeviceLog.info(`Flushing response buffer ${this.responseBuffer?.byteLength ?? 0} bytes`, {
+      responseBuffer: this.responseBuffer,
+    });
     this.responseBuffer = new Uint8Array([]);
   }
 

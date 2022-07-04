@@ -13,7 +13,7 @@ module.exports = {
   "insertPragma": false,
   "jsxSingleQuote": true,
   "tsxSingleQuote": true,
-  "printWidth": 80,
+  "printWidth": 100,
   "proseWrap": "preserve",
   "quoteProps": "as-needed",
   "requirePragma": false,

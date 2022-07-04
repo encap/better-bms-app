@@ -14,10 +14,10 @@ export function intToHexString(
 export function hexStringToBuffer(
   hexString: HexString,
   separator: HexSeparators = ' '
-): ArrayBuffer {
-  return new Int8Array(
+): Uint8Array {
+  return new Uint8Array(
     hexString.split(separator ?? '').map((h) => parseInt(h, 16))
-  ).buffer;
+  );
 }
 
 export function bufferToHexString(
