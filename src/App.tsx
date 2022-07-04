@@ -81,11 +81,15 @@ function App() {
     >
       <h2>{status === 'disconnected' ? `Click to connect` : status}</h2>
 
-      {data && data.batteryData && (
+      {data && data.batteryData && data.batteryData.voltage && (
         <>
           <h2>
-            {data.deviceInfo?.model} {'hw'}
-            {data.deviceInfo?.hardwareVersion}
+            {data.deviceInfo?.model && (
+              <>
+                {data.deviceInfo?.model} {'hw'}
+                {data.deviceInfo?.hardwareVersion}
+              </>
+            )}
           </h2>
 
           <h1>
