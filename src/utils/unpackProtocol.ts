@@ -76,7 +76,7 @@ export function unpackDataItemDescription(
       break;
     }
     case 'numeric': {
-      const [numberType, endiannes, multiplayer] = packedItem[
+      const [numberType, endiannes, multiplayer, precision] = packedItem[
         indexes.valueType
       ] as PackedNumericValueProperties;
       properties = {
@@ -84,6 +84,7 @@ export function unpackDataItemDescription(
         endiannes: endiannes ?? undefined,
         options: {
           multiplayer: multiplayer ?? 1,
+          precision: precision ?? 5,
         },
       };
       break;

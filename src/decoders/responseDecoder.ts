@@ -188,7 +188,11 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
 
             let processedValue = decodedValue;
             if (dataItem.options.multiplayer !== undefined) {
-              processedValue = decodedValue * dataItem.options.multiplayer;
+              processedValue = processedValue * dataItem.options.multiplayer;
+            }
+            if (dataItem.options.precision !== undefined) {
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              processedValue = Number(processedValue.toFixed(dataItem.options.precision ?? 5))!;
             }
 
             DecodeLog.debug(

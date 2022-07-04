@@ -12,8 +12,9 @@ export type NumberTypes =
   | 'Float64';
 export type Endiannes = 'bigEndian' | 'littleEndian';
 export type Multiplayer = number;
+export type Precision = number | null | undefined;
 export type PackedNumericValueProperties =
-  | [NumberTypes, Endiannes, Multiplayer]
+  | [NumberTypes, Endiannes, Multiplayer, Precision]
   | [NumberTypes, Endiannes]
   | [StrictExtract<NumberTypes, 'Int8' | 'Uint8'>];
 export type TextValueTypes = 'ASCII' | 'UTF-8' | 'hex';
@@ -68,6 +69,7 @@ export type ItemProperties =
       endiannes?: Endiannes;
       options: {
         multiplayer?: Multiplayer;
+        precision?: Precision;
       };
     }
   | {
