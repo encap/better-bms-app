@@ -36,7 +36,7 @@ export interface Device {
 
   connect(options?: ConnectOptions): Promise<DeviceIdentificator | null>;
 
-  disconnect(): Promise<DeviceIdentificator | null>;
+  disconnect(): Promise<void>;
 
   pause(): Promise<void>;
 }

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { Server } from 'http';
 import { ResponseDecoder } from '../../decoders/responseDecoder';
 import { Data } from '../../interfaces/data';
 import { DecodedResponseData, Decoder } from '../../interfaces/decoder';
@@ -18,12 +19,13 @@ import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 export class JKBMS implements Device {
   protocol: typeof JKBMS_PROTOCOL;
   status!: DeviceStatus;
-  deviceIdenticator: DeviceIdentificator | null;
+  deviceIdenticator!: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
-  lastPublicData: Data | null;
-  decoder: Decoder<string>;
+  lastPublicData!: Data | null;
+  decoder!: Decoder<string>;
   responseBuffer!: Uint8Array;
-  private characteristic: BluetoothRemoteGATTCharacteristic | null;
+  characteristic!: BluetoothRemoteGATTCharacteristic | null;
+  bluetoothDevice!: BluetoothDevice | null;
 
   constructor(callbacks: DeviceCallbacks) {
     DeviceLog.info(`JK BMS initializing`, { callbacks });
@@ -38,17 +40,25 @@ export class JKBMS implements Device {
         protocol: this.protocol,
       }
     );
+
     this.callbacks = callbacks;
+
+    this.reset();
+
+    DeviceLog.log(`Device initialized`, this);
+  }
+
+  private reset(): void {
+    DeviceLog.log(`Resetting device`, this);
     this.setStatus('disconnected');
     this.deviceIdenticator = null;
     this.lastPublicData = null;
     this.decoder = new ResponseDecoder(this.protocol);
 
     this.characteristic = null;
+    this.bluetoothDevice = null;
 
     this.flushResponseBuffer();
-
-    DeviceLog.log(`Device initialized`, this);
   }
 
   private setStatus(newStatus: DeviceStatus): void {
@@ -161,6 +171,7 @@ export class JKBMS implements Device {
       }
 
       this.characteristic = charateristic;
+      this.bluetoothDevice = device;
       this.setStatus('connected');
 
       DeviceLog.log(`Device ${device.name} ready for commands`, {
@@ -196,14 +207,28 @@ export class JKBMS implements Device {
     }
   }
 
-  async disconnect(): Promise<DeviceIdentificator | null> {
-    if (this.status === 'disconnected') {
+  async disconnect(): Promise<void> {
+    if (this.status === 'disconnected' || !this.bluetoothDevice) {
       DeviceLog.warn(`Device already disconnected`, this);
+
+      return;
     }
 
-    // @FIME: disconnect and reset
+    try {
+      DeviceLog.log(
+        `Trying to disconnet device ${this.bluetoothDevice.name}`,
+        this
+      );
+      this.characteristic?.stopNotifications();
+      await wait(100);
+      this.bluetoothDevice.gatt?.disconnect();
+      await wait(100);
 
-    return this.deviceIdenticator;
+      this.reset();
+    } catch (error) {
+      DeviceLog.warn(`Disconnect failed, reloading`);
+      document.location.reload();
+    }
   }
 
   async pause(): Promise<void> {

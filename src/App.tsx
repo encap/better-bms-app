@@ -45,12 +45,16 @@ function App() {
     <div
       className='App'
       onClick={() => {
-        device?.connect({
-          previous:
-            JSON.parse(
-              window.localStorage.getItem('previousDevice') || 'null'
-            ) ?? (undefined as DeviceIdentificator | undefined),
-        });
+        if (status === 'disconnected') {
+          device?.connect({
+            previous:
+              JSON.parse(
+                window.localStorage.getItem('previousDevice') || 'null'
+              ) ?? (undefined as DeviceIdentificator | undefined),
+          });
+        } else {
+          device?.disconnect();
+        }
       }}
     >
       <h2>{status === 'disconnected' ? `Click to connect` : status}</h2>
