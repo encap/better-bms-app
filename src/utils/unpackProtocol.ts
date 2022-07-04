@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DistributiveOmit } from '../interfaces';
 import {
+  ByteLength,
   CommandDefinition,
   DataItemTypes,
   GetterFunction,
@@ -47,7 +48,10 @@ export function unpackCommand<T extends string = string>(
   };
 }
 
-export function unpackDataItemDescription(packedItem: PackedItemDescription): ItemDescription {
+export function unpackDataItemDescription(
+  packedItem: PackedItemDescription,
+  offset: ByteLength = 0
+): ItemDescription {
   const indexes = PackedItemDescriptionIndexes;
   const type: DataItemTypes =
     packedItem[indexes.valueType] === 'raw'
@@ -91,6 +95,7 @@ export function unpackDataItemDescription(packedItem: PackedItemDescription): It
   // @ts-ignore
   return {
     byteLength: packedItem[indexes.byteLength] as number,
+    offset,
     type,
     group,
     name,
@@ -101,5 +106,18 @@ export function unpackDataItemDescription(packedItem: PackedItemDescription): It
 export function unpackCommandResponseDefinition(
   packedResponseDefinition: PackedItemDescription[]
 ): ItemDescription[] {
-  return packedResponseDefinition.map(unpackDataItemDescription);
+  return packedResponseDefinition.reduce(
+    (acc: ItemDescription[], packedItem: PackedItemDescription) => {
+      const previousItem = acc[acc.length - 1];
+
+      return [
+        ...acc,
+        unpackDataItemDescription(
+          packedItem,
+          previousItem ? previousItem.offset + previousItem.byteLength : 0
+        ),
+      ];
+    },
+    [] as ItemDescription[]
+  );
 }

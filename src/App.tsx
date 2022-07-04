@@ -68,13 +68,13 @@ function App() {
       {data && data.batteryData && (
         <>
           <h1>
-            {String(data.batteryData.voltage.toFixed(5)).slice(0, 6)}
+            {String(data.batteryData.voltage?.toFixed(5))?.slice(0, 6)}
             {'V'}
             <br />
-            {String(data.batteryData.current.toFixed(5)).slice(0, 6)}
+            {String(data.batteryData.current?.toFixed(5))?.slice(0, 6)}
             {'A'}
             <br />
-            {String(data.batteryData.power.toFixed(5)).slice(0, 6)}
+            {String(data.batteryData.power?.toFixed(5))?.slice(0, 6)}
             {'W'}
           </h1>
         </>

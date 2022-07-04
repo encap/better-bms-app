@@ -1,7 +1,7 @@
 import { StrictExtract, StrictOmit } from 'ts-essentials';
 import { Data, InternalData } from './data';
 
-export type NumericValueTypes =
+export type NumberTypes =
   | 'Int8'
   | 'Uint8'
   | 'Int16'
@@ -13,9 +13,9 @@ export type NumericValueTypes =
 export type Endiannes = 'bigEndian' | 'littleEndian';
 export type Multiplayer = number;
 export type PackedNumericValueProperties =
-  | [NumericValueTypes, Endiannes, Multiplayer]
-  | [NumericValueTypes, Endiannes]
-  | [StrictExtract<NumericValueTypes, 'Int8' | 'Uint8'>];
+  | [NumberTypes, Endiannes, Multiplayer]
+  | [NumberTypes, Endiannes]
+  | [StrictExtract<NumberTypes, 'Int8' | 'Uint8'>];
 export type TextValueTypes = 'ASCII' | 'UTF-8' | 'hex';
 export type RawValueType = 'raw';
 export type ByteLength = number;
@@ -28,9 +28,9 @@ export type PackedGroupAndName =
 
 export type GetterFunction = (itemData: {
   itemBuffer: ArrayBuffer;
-  length: ByteLength;
-  byteOffset: ByteLength;
-  buffer: ArrayBuffer;
+  byteLength: ByteLength;
+  offset: ByteLength;
+  responseBuffer: ArrayBuffer;
 }) => any;
 
 export type DataItemTypes = 'numeric' | 'text' | 'raw';
@@ -64,7 +64,7 @@ export type GroupAndName =
 export type ItemProperties =
   | {
       type: StrictExtract<DataItemTypes, 'numeric'>;
-      numberType: NumericValueTypes;
+      numberType: NumberTypes;
       endiannes?: Endiannes;
       options: {
         multiplayer?: Multiplayer;
@@ -81,6 +81,7 @@ export type ItemProperties =
 
 export type ItemDescription = {
   byteLength: ByteLength;
+  offset: ByteLength;
 } & GroupAndName &
   ItemProperties;
 
