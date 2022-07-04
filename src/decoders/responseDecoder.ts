@@ -150,7 +150,7 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
               }
               case 'UTF-8':
               case 'ASCII': {
-                const encodedString = this.utf8Decoder.decode(buffer);
+                const encodedString = this.utf8Decoder.decode(buffer).replaceAll('\u0000', '');
 
                 DecodeLog.debug(
                   `Decoded utf-8 or ascii text ${encodedString.length} ch \n${encodedString}`,
