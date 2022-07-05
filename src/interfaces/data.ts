@@ -47,7 +47,6 @@ export type Data = DeepReadonly<{
     // Total energy used (fractional cycleCount * nominalCapacity)
     cycledCapacity?: Units['ampHours'];
     percentage?: Units['percentage'];
-    remainingPercentage?: Units['percentage'];
     cycleCount?: number;
     resistances?: ArrayOfLength<Units['ohms'], CellCount>;
     avarageCellResistance?: Units['ohms'];

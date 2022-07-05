@@ -8,6 +8,7 @@ import { JKBMS } from './devices/jkbms';
 import { Data } from './interfaces/data';
 import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
 import { CellsGrid, TwoColumnGrid } from './styles';
+import { formatValue } from './utils/formatValue';
 import { UILog } from './utils/logger';
 
 function App() {
@@ -116,27 +117,28 @@ function App() {
           </ErrorBoundary>
 
           <TwoColumnGrid>
-            <label>
-              {'tempControll'}
-              {': '}
-            </label>
-            <span>{data?.batteryData?.temperatureProbes?.[0] ?? '-'}</span>
-            <label>
-              {'tempPositive'}
-              {': '}
-            </label>
-            <span>{data?.batteryData?.temperatureProbes?.[1] ?? '-'}</span>
+            {formatValue(
+              data.batteryData,
+              'temperatureProbes',
+              data?.batteryData?.temperatureProbes?.[0],
+              'T controller'
+            )}
+            {formatValue(
+              data.batteryData,
+              'temperatureProbes',
+              data?.batteryData?.temperatureProbes?.[1],
+              'T positive'
+            )}
 
             {Object.entries(data?.batteryData || {})
               .filter(([, value]) => typeof value === 'number')
               // @ts-ignore
               .map(([name, value]: [string, number]) => (
                 <React.Fragment key={name}>
-                  <label>
-                    {name.slice(0, 14)}
-                    {': '}
-                  </label>
-                  <span>{value ?? '-'}</span>
+                  {
+                    // @ts-ignore
+                    formatValue(data.batteryData, name, value)
+                  }
                 </React.Fragment>
               ))}
           </TwoColumnGrid>

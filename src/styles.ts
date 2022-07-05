@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const TwoColumnGrid = styled.div`
   margin: 16px 0;
   display: grid;
-  grid-template-columns: auto 50px auto 50px;
+  grid-template-columns: 1fr 50px 1fr 50px;
   grid-gap: 6px 5px;
   max-width: 100%;
   font-size: 16px;
