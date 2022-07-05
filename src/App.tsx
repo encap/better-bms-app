@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import './App.css';
+import { LineChart } from './components/molecules/LineChart';
 import LogViewer from './components/molecules/LogViewer';
 import { JKBMS } from './devices/jkbms';
 import { Data } from './interfaces/data';
@@ -24,6 +26,7 @@ function App() {
             (current) =>
               ({
                 ...current,
+                ...newData,
                 batteryData: {
                   ...current?.batteryData,
                   ...newData.batteryData,
@@ -107,6 +110,10 @@ function App() {
             {String(data.batteryData.remainingCapacity?.toFixed(2))?.slice(0, 5)}
             {'Ah'}
           </h1>
+
+          <ErrorBoundary fallback={<div />}>
+            <LineChart currentData={data} />
+          </ErrorBoundary>
 
           <TwoColumnGrid>
             <label>
