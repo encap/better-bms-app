@@ -10,8 +10,15 @@ import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
 import { CellsGrid, TwoColumnGrid } from './styles';
 import { formatValue } from './utils/formatValue';
 import { UILog } from './utils/logger';
+import useLocalStorage from 'react-use/lib/useLocalStorage';
+import { PREVIOUS_DEVICE_LOCAL_STORAGE_KEY } from './config';
 
 function App() {
+  const [previousDevice, setPreviousDevice] = useLocalStorage<DeviceIdentificator | null>(
+    PREVIOUS_DEVICE_LOCAL_STORAGE_KEY,
+    null
+  );
+
   const [status, setStatus] = useState<DeviceStatus>('disconnected');
   const [data, setData] = useState<Data | null>(null);
   const [device, setDevice] = useState<Device | null>(null);
@@ -43,7 +50,7 @@ function App() {
           setStatus(newStatus);
         },
         onConnected(deviceIdentificator) {
-          window.localStorage.setItem('previousDevice', JSON.stringify(deviceIdentificator));
+          setPreviousDevice(deviceIdentificator);
         },
         onDisconnected() {
           setData(null);
@@ -55,7 +62,7 @@ function App() {
           console.error(error);
         },
         onPreviousUnaviable() {
-          window.localStorage.removeItem('previousDevice');
+          setPreviousDevice(null);
         },
       })
     );
@@ -79,9 +86,7 @@ function App() {
       onClick={() => {
         if (status === 'disconnected') {
           device?.connect({
-            previous:
-              JSON.parse(window.localStorage.getItem('previousDevice') || 'null') ??
-              (undefined as DeviceIdentificator | undefined),
+            previous: previousDevice ?? undefined,
           });
         } else {
           device?.disconnect();
@@ -89,7 +94,7 @@ function App() {
       }}
     >
       <h2>
-        {status === 'disconnected' ? `Click to connect` : status}
+        {status === 'disconnected' ? `Click anywhere to connect` : status}
         {status === 'connected' &&
           data?.timeSinceLastOne &&
           `\xa0\xa0${String(data?.timeSinceLastOne).padStart(3, '\xa0')}ms`}

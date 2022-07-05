@@ -4,6 +4,7 @@ export const LogViewerContainer = styled.div`
   text-align: left;
   width: 100%;
   position: relative;
+  margin-top: 15px;
 `;
 
 export const LogCount = styled.h6`
