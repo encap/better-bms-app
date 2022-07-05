@@ -56,11 +56,13 @@ function App() {
 
   const lowestVol = useMemo(
     () =>
-      data?.batteryData?.voltages && Math.min(...data.batteryData.voltages.filter((v) => v !== 0)),
+      data?.batteryData?.voltages
+        ? Math.min(...data.batteryData.voltages.filter((v) => v !== 0))
+        : 0,
     [data]
   );
   const highestVol = useMemo(
-    () => data?.batteryData?.voltages && Math.max(...data.batteryData.voltages),
+    () => (data?.batteryData?.voltages ? Math.max(...data.batteryData.voltages) : 0),
     [data]
   );
 
@@ -137,7 +139,7 @@ function App() {
               <span
                 key={i}
                 className={classNames(
-                  lowestVol !== highestVol &&
+                  Math.abs(lowestVol - highestVol) > 0.004 &&
                     voltage !== 0 &&
                     (voltage === lowestVol ? 'lowest' : voltage === highestVol ? 'highest' : '')
                 )}
