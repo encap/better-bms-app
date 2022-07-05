@@ -186,7 +186,7 @@ export function LineChart({ currentData }: LineChartProps) {
     if (chartRef.current && currentData.batteryData && !pauseTimestamp.current) {
       const datum: Datum = {
         timestamp: currentData.timestamp,
-        voltage: currentData.batteryData?.voltage - Math.random() * 10,
+        voltage: currentData.batteryData?.voltage,
         current: Math.abs(currentData.batteryData?.current),
       };
 
