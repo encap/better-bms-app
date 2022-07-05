@@ -70,7 +70,7 @@ export function setupLogger() {
 
   Logger.setHandler(consoleHandler);
 
-  // DeviceLog.setLevel(Logger.WARN);
+  DeviceLog.setLevel(Logger.INFO);
   DecodeLog.setLevel(Logger.WARN);
 
   Logger.info('Logger ready');

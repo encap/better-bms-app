@@ -87,7 +87,7 @@ export class JKBMS implements Device {
 
     try {
       if (options?.previous && navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
-        DeviceLog.info(`Previous device option set ${options.previous.name}`, {
+        DeviceLog.debug(`Previous device option set ${options.previous.name}`, {
           previous: options.previous,
         });
         const previousDevice = await this.tryGetPreviousDevice(options.previous);
@@ -128,12 +128,12 @@ export class JKBMS implements Device {
     }
 
     try {
-      DeviceLog.log(`Connecting to device ${device.name}`, { device });
+      DeviceLog.info(`Connecting to device ${device.name}`, { device });
       const server = await device.gatt?.connect().catch((error) => {
         console.error(error);
         throw new Error(`Can't connect to GAAT Server of ${device?.name}`);
       });
-      DeviceLog.info(`Connected to ${device.name}`, { device, server });
+      DeviceLog.log(`Connected to ${device.name}`, { device, server });
 
       device.addEventListener('gattserverdisconnected', this.disconnect.bind(this));
       this.registerActivity();
@@ -187,9 +187,12 @@ export class JKBMS implements Device {
         name: device.name || device.id,
       };
 
-      DeviceLog.info(`Returning device identificator ${device.name} ${this.deviceIdenticator.id}`, {
-        deviceIdentificator: this.deviceIdenticator,
-      });
+      DeviceLog.debug(
+        `Returning device identificator ${device.name} ${this.deviceIdenticator.id}`,
+        {
+          deviceIdentificator: this.deviceIdenticator,
+        }
+      );
 
       this.callbacks.onConnected?.(this.deviceIdenticator);
 
@@ -289,7 +292,7 @@ export class JKBMS implements Device {
       // unwatchAdvertisements hangs, use abort instead
       // matchedDevice.unwatchAdvertisements();
       abortController.abort();
-      DeviceLog.info(`Stopped watching for advertisements`, {
+      DeviceLog.debug(`Stopped watching for advertisements`, {
         abortController,
         matchedDevice,
         isMatchedDeviceInRange,
@@ -335,7 +338,7 @@ export class JKBMS implements Device {
       ],
     });
 
-    DeviceLog.info(`Got premission to use device ${device.name}`, { device });
+    DeviceLog.debug(`Got premission to use device ${device.name}`, { device });
 
     return device;
   }
@@ -423,25 +426,25 @@ export class JKBMS implements Device {
 
     clearTimeout(timeout);
 
-    DeviceLog.info(`Waiting ${command.wait}ms before ready for next command`, {
+    DeviceLog.debug(`Waiting ${command.wait}ms before ready for next command`, {
       command,
     });
     await wait(command.wait);
   }
 
   private constructCommandPayload(command: Required<CommandDefinition>): Uint8Array {
-    DeviceLog.info(`Constructing payload for ${command.name}`, { command });
+    DeviceLog.debug(`Constructing payload for ${command.name}`, { command });
     const template = new Uint8Array(20);
     const commandBuffer = new Uint8Array([
       ...this.protocol.commandHeader,
       ...command.payload,
       ...template,
     ]).slice(0, template.length);
-    DeviceLog.info(`Command pre checksum: ${bufferToHexString(commandBuffer)}`, { commandBuffer });
+    DeviceLog.debug(`Command pre checksum: ${bufferToHexString(commandBuffer)}`, { commandBuffer });
     const checksum = this.calculateChecksum(commandBuffer.slice(0, -1));
 
     commandBuffer[commandBuffer.length - 1] = checksum;
-    DeviceLog.info(`Command with checksum: ${bufferToHexString(commandBuffer)}`, {
+    DeviceLog.debug(`Command with checksum: ${bufferToHexString(commandBuffer)}`, {
       commandBuffer,
       checksum,
     });
@@ -460,7 +463,7 @@ export class JKBMS implements Device {
 
     const valueArray = new Uint8Array(value.buffer);
 
-    DeviceLog.log(
+    DeviceLog.debug(
       chalk.bgCyan.black(
         // @ts-ignore
         ` Received notification from ${event.target?.service?.device?.name} (${value.byteLength} bytes) `
@@ -470,13 +473,13 @@ export class JKBMS implements Device {
 
     try {
       if (this.doesStartWithSegmentHeader(valueArray)) {
-        DeviceLog.info(`Segment header detected`);
+        DeviceLog.debug(`Segment header detected`);
         this.flushResponseBuffer();
         this.responseBuffer = valueArray;
       } else {
         // responseBuffer should always start with segment header or have 0 length
         if (this.doesStartWithSegmentHeader(this.responseBuffer)) {
-          DeviceLog.info(
+          DeviceLog.debug(
             `Appending frame to previous segment. Total length ${
               this.responseBuffer.byteLength + valueArray.byteLength
             }`,
@@ -519,7 +522,7 @@ export class JKBMS implements Device {
         }
 
         try {
-          DeviceLog.info(`Segment complete and valid. Decoding ${command.name}`, {
+          DeviceLog.debug(`Segment complete and valid. Decoding ${command.name}`, {
             responseBuffer: this.responseBuffer,
           });
 
@@ -536,7 +539,7 @@ export class JKBMS implements Device {
           return;
         }
       } else {
-        DeviceLog.info(`Segment not complete. Waiting for more data`);
+        DeviceLog.debug(`Segment not complete. Waiting for more data`);
       }
     } catch (error) {
       console.error(error);
@@ -544,11 +547,11 @@ export class JKBMS implements Device {
       this.flushResponseBuffer();
     }
 
-    DeviceLog.info(`Notification handle end`);
+    DeviceLog.debug(`Notification handle end`);
   }
 
   private doesStartWithSegmentHeader(buffer: Uint8Array): boolean {
-    DeviceLog.info(
+    DeviceLog.debug(
       `Checking for segment header ${bufferToHexString(this.protocol.segmentHeader)}`,
       { buffer, header: this.protocol.segmentHeader }
     );
@@ -559,7 +562,7 @@ export class JKBMS implements Device {
   }
 
   private isSegmentComplete(segment: Uint8Array, command: CommandDefinition): boolean {
-    DeviceLog.info(`Checking if segment is complete`, { segment, command });
+    DeviceLog.debug(`Checking if segment is complete`, { segment, command });
 
     if (!this.doesStartWithSegmentHeader(segment)) {
       // This shouldn't happen
@@ -570,7 +573,7 @@ export class JKBMS implements Device {
     }
 
     if (segment.length === command.responseLength) {
-      DeviceLog.info(`Segment has expected length ${command.responseLength} bytes`, {
+      DeviceLog.debug(`Segment has expected length ${command.responseLength} bytes`, {
         segment,
         command,
       });
@@ -586,7 +589,7 @@ export class JKBMS implements Device {
       return true;
     }
 
-    DeviceLog.info(
+    DeviceLog.debug(
       `Segment needs ${command.responseLength - segment.length} more bytes to be complete`,
       { segment, command }
     );
@@ -599,7 +602,7 @@ export class JKBMS implements Device {
     const calculatedChecksum = this.calculateChecksum(segment.slice(0, -1));
 
     if (checksum === calculatedChecksum) {
-      DeviceLog.info(`Checksum correct ${intToHexString(checksum, '0x')}`);
+      DeviceLog.debug(`Checksum correct ${intToHexString(checksum, '0x')}`);
       return true;
     }
 
@@ -616,13 +619,13 @@ export class JKBMS implements Device {
   private getSegmentType(segment: Uint8Array): number {
     const segmentType = segment[this.protocol.segmentHeader.length];
 
-    DeviceLog.info(`Detected segment type ${intToHexString(segmentType, '0x')}`);
+    DeviceLog.debug(`Detected segment type ${intToHexString(segmentType, '0x')}`);
 
     return segmentType;
   }
 
   private calculateChecksum(byteArray: Uint8Array): number {
-    DeviceLog.info(`Calculating checksum for ${byteArray.byteLength} bytes`, {
+    DeviceLog.debug(`Calculating checksum for ${byteArray.byteLength} bytes`, {
       byteArray,
     });
     const sum = byteArray.reduce((acc, byte) => (acc += byte), 0);
@@ -630,7 +633,7 @@ export class JKBMS implements Device {
     const checksum = sum & 0xff;
 
     console.assert(checksum <= 255);
-    DeviceLog.info(`Calculated checksum: ${intToHexString(checksum, '0x')}`, {
+    DeviceLog.debug(`Calculated checksum: ${intToHexString(checksum, '0x')}`, {
       byteArray,
       checksum,
     });
@@ -639,7 +642,7 @@ export class JKBMS implements Device {
   }
 
   private flushResponseBuffer(): void {
-    DeviceLog.info(`Flushing response buffer ${this.responseBuffer?.byteLength ?? 0} bytes`, {
+    DeviceLog.debug(`Flushing response buffer ${this.responseBuffer?.byteLength ?? 0} bytes`, {
       responseBuffer: this.responseBuffer,
     });
     this.responseBuffer = new Uint8Array([]);
@@ -651,7 +654,7 @@ export class JKBMS implements Device {
       ? timestamp - this.lastPublicData.timestamp
       : null;
 
-    DeviceLog.info(`Handle decoded data. Last ${timeSinceLastOne} ms ago`, {
+    DeviceLog.debug(`Preparing public data`, {
       decodedData,
       timeSinceLastOne,
       timestamp: new Date(timestamp),
@@ -668,7 +671,9 @@ export class JKBMS implements Device {
     this.lastPublicData = publicData;
 
     DeviceLog.log(
-      `Data ready. V: ${publicData.batteryData?.voltage}. CRC: ${publicData.checksumCorrect}`,
+      `New data arrived V: ${
+        publicData.batteryData?.voltage || publicData.deviceInfo?.hardwareVersion
+      } Ping: ${publicData.timeSinceLastOne}ms`,
       { publicData, decodedData, internalData: decodedData.internalData }
     );
 
