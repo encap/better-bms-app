@@ -22,6 +22,7 @@ import { ChartJSOrUndefined } from 'react-chartjs-2/dist/types';
 import { ChartClickArea, ChartContainer } from './styles';
 import { UILog } from '../../../utils/logger';
 import { useLongPress, LongPressDetectEvents } from 'use-long-press';
+import dayjs from 'dayjs';
 Chart.register(ChartStreaming);
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -29,7 +30,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 export const options: ChartOptions<'line'> = {
   responsive: true,
   animation: false,
-  spanGaps: true,
+  spanGaps: false,
   scales: {
     x: {
       type: 'realtime',
@@ -69,7 +70,7 @@ export const options: ChartOptions<'line'> = {
       display: false,
     },
     streaming: {
-      duration: 1000 * 60 * 1,
+      duration: 1000 * 60 * 2,
       delay: 300,
       frameRate: 5,
     },
@@ -88,11 +89,11 @@ type Datum = {
 
 export function LineChart({ currentData }: LineChartProps) {
   const chartRef = useRef<ChartJSOrUndefined<'line', Datum[]>>();
-  const isPausedRef = useRef(false);
+  const pauseTimestamp = useRef<number | null>(null);
 
   const handleLongPress = useCallback(() => {
     UILog.log(`Reset chart on long press`, {
-      isPausedRef,
+      pauseTimestamp,
       chartRef,
     });
     if (chartRef.current) {
@@ -106,18 +107,38 @@ export function LineChart({ currentData }: LineChartProps) {
     ev.stopPropagation();
     ev.preventDefault();
 
-    UILog.log(isPausedRef.current ? `Resumit chart updates` : `Pausing chart updates`, {
+    UILog.log(pauseTimestamp.current ? `Resumit chart updates` : `Pausing chart updates`, {
       ev,
-      isPausedRef,
+      pauseTimestamp,
       chartRef,
     });
-    isPausedRef.current = !isPausedRef.current;
-    if (chartRef.current) {
-      // Doesn't work :(
-      chartRef.current.data.datasets.forEach((dataset) => dataset.data.push(null));
+    if (pauseTimestamp.current) {
+      if (chartRef.current) {
+        const timeDifference = dayjs().valueOf() - pauseTimestamp.current;
+
+        chartRef.current.data.datasets.forEach(
+          (dataset) =>
+            (dataset.data = [
+              ...dataset.data.map((datum) =>
+                datum
+                  ? ({
+                      ...datum,
+                      timestamp: datum.timestamp + timeDifference - 5000,
+                    } as Datum)
+                  : datum
+              ),
+              null,
+            ])
+        );
+      }
+
+      pauseTimestamp.current = null;
+    } else {
+      pauseTimestamp.current = dayjs().valueOf();
     }
+
     if (chartRef.current?.options?.plugins?.streaming) {
-      chartRef.current.options.plugins.streaming.pause = isPausedRef.current;
+      chartRef.current.options.plugins.streaming.pause = Boolean(pauseTimestamp.current);
     }
   }, []);
 
@@ -158,7 +179,7 @@ export function LineChart({ currentData }: LineChartProps) {
   );
 
   useEffect(() => {
-    if (chartRef.current && currentData.batteryData && !isPausedRef.current) {
+    if (chartRef.current && currentData.batteryData && !pauseTimestamp.current) {
       const datum: Datum = {
         timestamp: currentData.timestamp,
         voltage: currentData.batteryData?.voltage,
