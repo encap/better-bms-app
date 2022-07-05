@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import './App.css';
 import { LineChart } from './components/molecules/LineChart';

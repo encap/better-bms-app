@@ -27,6 +27,7 @@ export const JKBMS_PROTOCOL: DeepRequired<PackedProtocolSpecification<JKBMS_COMM
   serviceUuid: 0xffe0,
   characteristicUuid: 0xffe1,
   connectPreviousTimeout: 3000,
+  inactivityTimeout: 3000,
   segmentHeader: new Uint8Array([0x55, 0xaa, 0xeb, 0x90]),
   commandHeader: new Uint8Array([0xaa, 0x55, 0x90, 0xeb]),
   commandLength: 20,

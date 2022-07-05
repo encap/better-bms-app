@@ -26,6 +26,7 @@ export class JKBMS implements Device {
   responseBuffer!: Uint8Array;
   characteristic!: BluetoothRemoteGATTCharacteristic | null;
   bluetoothDevice!: BluetoothDevice | null;
+  inactivityTimeout: ReturnType<typeof setTimeout> | null | undefined;
 
   constructor(callbacks: DeviceCallbacks) {
     DeviceLog.info(`JK BMS initializing`, { callbacks });
@@ -62,6 +63,9 @@ export class JKBMS implements Device {
 
     this.characteristic = null;
     this.bluetoothDevice = null;
+
+    clearTimeout(this.inactivityTimeout ?? undefined);
+    this.inactivityTimeout = null;
 
     this.flushResponseBuffer();
   }
@@ -131,6 +135,9 @@ export class JKBMS implements Device {
       });
       DeviceLog.info(`Connected to ${device.name}`, { device, server });
 
+      device.addEventListener('gattserverdisconnected', this.disconnect.bind(this));
+      this.registerActivity();
+
       if (!server) {
         throw new Error(`Can't connect to GAAT Server of ${device.name}`);
       }
@@ -175,18 +182,18 @@ export class JKBMS implements Device {
 
       this.subscribeToDataNotifications();
 
-      const deviceIdenticator: DeviceIdentificator = {
+      this.deviceIdenticator = {
         id: device.id,
         name: device.name || device.id,
       };
 
-      DeviceLog.info(`Returning device identificator ${device.name} ${deviceIdenticator.id}`, {
-        deviceIdenticator,
+      DeviceLog.info(`Returning device identificator ${device.name} ${this.deviceIdenticator.id}`, {
+        deviceIdentificator: this.deviceIdenticator,
       });
 
-      this.callbacks.onConnected?.(deviceIdenticator);
+      this.callbacks.onConnected?.(this.deviceIdenticator);
 
-      return deviceIdenticator;
+      return this.deviceIdenticator;
     } catch (error) {
       DeviceLog.error(
         // @ts-ignore
@@ -333,6 +340,18 @@ export class JKBMS implements Device {
     return device;
   }
 
+  private registerActivity(): ReturnType<typeof setTimeout> {
+    if (this.inactivityTimeout !== null) {
+      clearTimeout(this.inactivityTimeout);
+    }
+    this.inactivityTimeout = setTimeout(() => {
+      DeviceLog.warn(`Disconnecting ${this.deviceIdenticator?.name} due to inactivity`);
+      this.disconnect();
+    }, this.protocol.inactivityTimeout);
+
+    return this.inactivityTimeout;
+  }
+
   private async subscribeToDataNotifications(): Promise<void> {
     if (!this.characteristic) {
       DeviceLog.error(`Can't subscribe. Device must be connected first.`);
@@ -431,6 +450,7 @@ export class JKBMS implements Device {
   }
 
   private handleNotification(event: Event): void {
+    this.registerActivity();
     const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
 
     if (!value?.byteLength) {

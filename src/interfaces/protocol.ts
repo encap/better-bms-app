@@ -112,6 +112,7 @@ export interface ProtocolSpecification<T extends string> {
   serviceUuid?: number;
   characteristicUuid?: number;
   connectPreviousTimeout?: number;
+  inactivityTimeout?: number;
   commands: CommandDefinition<T>[];
   getCommand(commandName: T): CommandDefinition<T>;
 }
