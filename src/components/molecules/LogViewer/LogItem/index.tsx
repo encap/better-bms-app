@@ -1,10 +1,13 @@
 import Convert from 'ansi-to-html';
 import React, { useMemo } from 'react';
 import { LogType } from '..';
+import { LevelIconMap } from '../../../../utils/logger';
 import { ansiColorPalette, LogItemWrapper } from './styles';
+
 const ConvertInstance = new Convert({
   colors: ansiColorPalette,
 });
+
 const ansiToHtml = ConvertInstance.toHtml.bind(ConvertInstance);
 
 type LogItemProps = {
@@ -12,7 +15,10 @@ type LogItemProps = {
 };
 
 const LogItem = ({ log }: LogItemProps) => {
-  const html = useMemo(() => ansiToHtml(log[2]), [log]);
+  const html = useMemo(
+    () => `&nbsp;<span>${LevelIconMap[log[1]]}</span>&nbsp;${ansiToHtml(log[2])}`,
+    [log]
+  );
 
   return (
     <LogItemWrapper

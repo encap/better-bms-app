@@ -6,10 +6,17 @@ export const LogItemWrapper = styled.p`
   font-size: 14px;
   white-space: pre-wrap;
   margin: 2px 0;
-  padding: 2px 2px;
+  padding: 2px 2px 2px 0;
+  display: flex;
+  flex-wrap: wrap;
 
   span {
+    display: inline-block;
     border-radius: 4px;
+
+    &:last-of-type {
+      margin-right: auto;
+    }
   }
 
   &.error {

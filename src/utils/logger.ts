@@ -1,6 +1,6 @@
 import { ChalkInstance, Chalk } from 'chalk';
 import dayjs from 'dayjs';
-import Logger, { ILogHandler } from 'js-logger';
+import Logger, { ILogHandler, ILogLevel } from 'js-logger';
 
 export const chalk = new Chalk({
   level: 1,
@@ -12,6 +12,13 @@ export enum LOG_SCOPES {
   DECODE = 'decode',
   UI = '  ui  ',
 }
+
+export const LevelIconMap: Record<ILogLevel['name'], string> = {
+  error: '🚨',
+  warn: '⚠️',
+  info: 'ℹ️',
+  debug: '🐞',
+};
 
 export const SCOPES_COLOR_MAP: Record<
   LOG_SCOPES,
@@ -39,13 +46,19 @@ export const consoleHandler = (
   const prefix = `${coloredDate} ${coloredScope}`;
 
   if (typeof messages[0] === 'string') {
-    messages[0] = `${prefix} ${messages[0]}`;
+    // White to remove debug color in chrome
+    messages[0] = `${prefix} ${chalk.white(messages[0])}`;
   } else {
     messages.unshift(prefix);
   }
 
+  // Browsers have their own icon for warn and error (and sometimes for others too)
+  const firstMessageWithEmoji = ['INFO', 'DEBUG'].includes(context.level.name)
+    ? `${LevelIconMap[context.level.name.toLowerCase()]} ${messages[0]}`
+    : messages[0];
+
   // @ts-ignore
-  console[context.level.name.toLowerCase()](...messages);
+  console[context.level.name.toLowerCase()](firstMessageWithEmoji, ...messages.slice(1));
 
   return {
     date,
