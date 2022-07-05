@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import './App.css';
 import { LineChart } from './components/molecules/LineChart';
@@ -9,7 +9,7 @@ import { Data } from './interfaces/data';
 import { Device, DeviceIdentificator, DeviceStatus } from './interfaces/device';
 import { CellsGrid, TwoColumnGrid } from './styles';
 import { formatValue } from './utils/formatValue';
-import { UILog } from './utils/logger';
+import { GlobalLog, UILog } from './utils/logger';
 import useLocalStorage from 'react-use/lib/useLocalStorage';
 import { PREVIOUS_DEVICE_LOCAL_STORAGE_KEY } from './config';
 
@@ -22,6 +22,7 @@ function App() {
   const [status, setStatus] = useState<DeviceStatus>('disconnected');
   const [data, setData] = useState<Data | null>(null);
   const [device, setDevice] = useState<Device | null>(null);
+  const wakelokRef = useRef<WakeLockSentinel>();
 
   useEffect(() => {
     UILog.info('App rendered');
@@ -48,11 +49,24 @@ function App() {
       onStatusChange(newStatus) {
         setStatus(newStatus);
       },
-      onConnected(deviceIdentificator) {
+      async onConnected(deviceIdentificator) {
         setPreviousDevice(deviceIdentificator);
+        try {
+          if ('wakeLock' in navigator) {
+            wakelokRef.current = await navigator.wakeLock.request('screen');
+          } else {
+            throw new Error('WakeLock not suppoerted');
+          }
+        } catch (error) {
+          GlobalLog.warn(`Failed to acquire wakeLock`, { error });
+        }
       },
       onDisconnected() {
         // setData(null);
+        if (wakelokRef.current) {
+          GlobalLog.info(`Releasing wakelock`, { wakelokRef });
+          wakelokRef.current.release();
+        }
       },
       onError(error) {
         console.error(error);
