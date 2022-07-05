@@ -1,9 +1,7 @@
 import { DeepPartial } from 'ts-essentials';
-import { InternalData } from '../interfaces/data';
 import { DecodedResponseData, Decoder } from '../interfaces/decoder';
 import {
   CommandDefinition,
-  NumberTypes,
   PackedProtocolSpecification,
   ProtocolSpecification,
 } from '../interfaces/protocol';
