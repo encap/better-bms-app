@@ -5,6 +5,34 @@
 */
 
 /*!
+ * @kurkle/color v0.2.1
+ * https://github.com/kurkle/color#readme
+ * (c) 2022 Jukka Kurkela
+ * Released under the MIT License
+ */
+
+/*!
+ * Chart.js v3.8.0
+ * https://www.chartjs.org
+ * (c) 2022 Chart.js Contributors
+ * Released under the MIT License
+ */
+
+/*!
+ * chartjs-adapter-date-fns v2.0.0
+ * https://www.chartjs.org
+ * (c) 2021 chartjs-adapter-date-fns Contributors
+ * Released under the MIT license
+ */
+
+/*!
+ * chartjs-plugin-streaming v2.0.0
+ * https://nagix.github.io/chartjs-plugin-streaming
+ * (c) 2017-2021 Akihiko Kusanagi
+ * Released under the MIT license
+ */
+
+/*!
  * js-logger - http://github.com/jonnyreeves/js-logger
  * Jonny Reeves, http://jonnyreeves.co.uk/
  * js-logger may be freely distributed under the MIT license.
