@@ -26,46 +26,50 @@ function App() {
   useEffect(() => {
     UILog.info('App rendered');
 
-    setDevice(
-      new JKBMS({
-        onDataChange(newData) {
-          // @ts-ingore
-          setData(
-            (current) =>
-              ({
-                ...current,
-                ...newData,
-                batteryData: {
-                  ...current?.batteryData,
-                  ...newData.batteryData,
-                },
-                deviceInfo: {
-                  ...current?.deviceInfo,
-                  ...newData.deviceInfo,
-                },
-              } as Data)
-          );
-        },
-        onStatusChange(newStatus) {
-          setStatus(newStatus);
-        },
-        onConnected(deviceIdentificator) {
-          setPreviousDevice(deviceIdentificator);
-        },
-        onDisconnected() {
-          setData(null);
-        },
-        onError(error) {
-          console.error(error);
-        },
-        onRequestDeviceError(error) {
-          console.error(error);
-        },
-        onPreviousUnaviable() {
-          setPreviousDevice(null);
-        },
-      })
-    );
+    const newDevice = new JKBMS({
+      onDataChange(newData) {
+        // @ts-ingore
+        setData(
+          (current) =>
+            ({
+              ...current,
+              ...newData,
+              batteryData: {
+                ...current?.batteryData,
+                ...newData.batteryData,
+              },
+              deviceInfo: {
+                ...current?.deviceInfo,
+                ...newData.deviceInfo,
+              },
+            } as Data)
+        );
+      },
+      onStatusChange(newStatus) {
+        setStatus(newStatus);
+      },
+      onConnected(deviceIdentificator) {
+        setPreviousDevice(deviceIdentificator);
+      },
+      onDisconnected() {
+        // setData(null);
+      },
+      onError(error) {
+        console.error(error);
+      },
+      onRequestDeviceError(error) {
+        console.error(error);
+      },
+      onPreviousUnaviable() {
+        setPreviousDevice(null);
+      },
+    });
+
+    setDevice(newDevice);
+
+    return () => {
+      newDevice.disconnect();
+    };
   }, []);
 
   const lowestVol = useMemo(
