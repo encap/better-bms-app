@@ -14,6 +14,7 @@ export type DeviceCallbacks = {
   onRequestDeviceError?(error: Error): void;
   onStatusChange?(status: DeviceStatus): void;
   onConnected?(deviceIdentificator: DeviceIdentificator): void;
+  onDisconnected?(): void;
   onError?(error: Error): void;
   onDataChange(data: Data): void;
 };

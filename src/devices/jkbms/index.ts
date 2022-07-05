@@ -213,6 +213,8 @@ export class JKBMS implements Device {
       this.bluetoothDevice.gatt?.disconnect();
       await wait(100);
 
+      this.callbacks?.onDisconnected?.();
+
       this.reset();
     } catch (error) {
       DeviceLog.warn(`Disconnect failed, reloading`);

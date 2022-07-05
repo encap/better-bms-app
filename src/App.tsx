@@ -45,6 +45,9 @@ function App() {
         onConnected(deviceIdentificator) {
           window.localStorage.setItem('previousDevice', JSON.stringify(deviceIdentificator));
         },
+        onDisconnected() {
+          setData(null);
+        },
         onError(error) {
           console.error(error);
         },
@@ -85,7 +88,12 @@ function App() {
         }
       }}
     >
-      <h2>{status === 'disconnected' ? `Click to connect` : status}</h2>
+      <h2>
+        {status === 'disconnected' ? `Click to connect` : status}
+        {status === 'connected' &&
+          data?.timeSinceLastOne &&
+          `\xa0\xa0${String(data?.timeSinceLastOne).padStart(3, '\xa0')}ms`}
+      </h2>
 
       {data && data.batteryData && data.batteryData.voltage && (
         <>
