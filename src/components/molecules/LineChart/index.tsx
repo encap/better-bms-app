@@ -123,7 +123,11 @@ export function LineChart({ currentData }: LineChartProps) {
                 datum
                   ? ({
                       ...datum,
-                      timestamp: datum.timestamp + timeDifference - 5000,
+                      timestamp:
+                        // Add a gap after paused segment
+                        datum.timestamp +
+                        timeDifference -
+                        (options.plugins?.streaming?.duration || 1) / 50,
                     } as Datum)
                   : datum
               ),
@@ -182,7 +186,7 @@ export function LineChart({ currentData }: LineChartProps) {
     if (chartRef.current && currentData.batteryData && !pauseTimestamp.current) {
       const datum: Datum = {
         timestamp: currentData.timestamp,
-        voltage: currentData.batteryData?.voltage,
+        voltage: currentData.batteryData?.voltage - Math.random() * 10,
         current: Math.abs(currentData.batteryData?.current),
       };
 
