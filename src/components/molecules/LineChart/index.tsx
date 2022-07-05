@@ -69,7 +69,7 @@ export const options: ChartOptions<'line'> = {
       display: false,
     },
     streaming: {
-      duration: 1000 * 60 * 0.1,
+      duration: 1000 * 60 * 1,
       delay: 300,
       frameRate: 5,
     },

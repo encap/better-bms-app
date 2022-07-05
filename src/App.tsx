@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import './App.css';
 import { LineChart } from './components/molecules/LineChart';
@@ -88,12 +88,16 @@ function App() {
           device?.connect({
             previous: previousDevice ?? undefined,
           });
-        } else {
-          device?.disconnect();
         }
       }}
     >
-      <h2>
+      <h2
+        onClick={() => {
+          if (status !== 'disconnected') {
+            device?.disconnect();
+          }
+        }}
+      >
         {status === 'disconnected' ? `Click anywhere to connect` : status}
         {status === 'connected' &&
           data?.timeSinceLastOne &&
