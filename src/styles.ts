@@ -25,6 +25,8 @@ export const CellsGrid = styled.div`
   justify-items: space-evenly;
   text-align: center;
   gap: 5px 5px;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(8, auto);
 
   .highest {
     color: rgb(26, 181, 203);

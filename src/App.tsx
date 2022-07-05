@@ -143,7 +143,7 @@ function App() {
                     voltage !== 0 &&
                     (voltage === lowestVol ? 'lowest' : voltage === highestVol ? 'highest' : '')
                 )}
-              >{`${String(i).padStart(2, '0')}: ${
+              >{`${String(i + 1).padStart(2, '0')}: ${
                 voltage === 0 ? '----- ' : voltage.toFixed(3)
               }`}</span>
             ))}
