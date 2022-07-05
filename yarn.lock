@@ -9441,6 +9441,11 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
+use-long-press@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/use-long-press/-/use-long-press-2.0.2.tgz#3c945ee45b671e9c6976fe5364bdb5f563b3ff82"
+  integrity sha512-zQ4sujilCykA7fSZ+m2gDuGw5aW3Gm3M4pulRH4e8c4mGXw8MDQIMthCsHiolxpt/hCe/BbIvd/iDn9XNDzkYg==
+
 util-deprecate@^1.0.1, util-deprecate@^1.0.2, util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
