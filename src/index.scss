@@ -1,5 +1,22 @@
+@use "~inter-ui/default" with (
+  $inter-font-display: swap,
+  $inter-font-path: '~inter-ui/Inter (web)'
+);
+@use "~inter-ui/variable" with (
+  $inter-font-display: swap,
+  $inter-font-path: '~inter-ui/Inter (web)'
+);
+@include default.all;
+@include variable.all;
+
+html { font-family: "Inter", "system-ui"; }
+
+@supports (font-variation-settings: normal) {
+  html { font-family: "Inter var", "system-ui"; }
+}
+
 *, *::before,  *::after {
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   margin: 0;
   padding: 0;
 }
@@ -11,7 +28,6 @@ html, body {
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -22,6 +38,7 @@ body {
   max-width: 500px;
   margin: 0 auto;
   outline: 1px solid #111;
+  overflow-y: auto;
 }
 
 code {

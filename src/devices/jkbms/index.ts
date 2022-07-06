@@ -213,16 +213,16 @@ export class JKBMS implements Device {
     if (this.status === 'disconnected' || !this.bluetoothDevice) {
       DeviceLog.warn(`Device already disconnected`, this);
 
-      return;
+      // return;
     }
 
     try {
-      DeviceLog.log(`Trying to disconnet device ${this.bluetoothDevice.name}`, this);
+      DeviceLog.log(`Trying to disconnet device ${this.bluetoothDevice?.name}`, this);
       await this.characteristic?.stopNotifications().catch((error) => {
         console.warn(error);
       });
       await wait(100);
-      this.bluetoothDevice.gatt?.disconnect();
+      this.bluetoothDevice?.gatt?.disconnect();
       await wait(100);
 
       this.callbacks?.onDisconnected?.();

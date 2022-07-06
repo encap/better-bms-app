@@ -14,8 +14,10 @@ export const MainInfoContainer = styled.div`
 
 export const MainInfo = styled.h3`
   text-align: center;
-  font-size: 70px;
+  font-size: 80px;
   font-weight: 500;
+  margin: 0;
+  line-height: 90%;
 `;
 
 export const MainInfoUnit = styled.span`
