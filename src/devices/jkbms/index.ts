@@ -218,7 +218,9 @@ export class JKBMS implements Device {
 
     try {
       DeviceLog.log(`Trying to disconnet device ${this.bluetoothDevice.name}`, this);
-      this.characteristic?.stopNotifications();
+      await this.characteristic?.stopNotifications().catch((error) => {
+        console.warn(error);
+      });
       await wait(100);
       this.bluetoothDevice.gatt?.disconnect();
       await wait(100);
