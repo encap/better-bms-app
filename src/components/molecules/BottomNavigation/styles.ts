@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 export const BottomNavigationContainer = styled.nav`
   width: 100%;
-  margin-top: 16px;
+  padding: 0 16px 8px;
 
   .tabs {
     .highlight {
