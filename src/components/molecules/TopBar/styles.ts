@@ -10,8 +10,9 @@ export const ToolbarContainer = styled.div`
 export const DeviceStatusText = styled.h2`
   grid-column: 2;
   text-align: center;
-  font-size: 18px;
+  font-size: 20px;
   white-space: nowrap;
+  font-weight: 500;
 `;
 
 export const SmallText = styled.span`

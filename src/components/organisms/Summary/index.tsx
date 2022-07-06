@@ -90,9 +90,11 @@ const Summary = ({ data }: SummaryProps) => {
                 voltage !== 0 &&
                 (voltage === lowestVol ? 'lowest' : voltage === highestVol ? 'highest' : '')
             )}
-          >{`${String(i + 1).padStart(2, '0')}: ${
-            voltage === 0 ? '----- ' : voltage.toFixed(3)
-          }`}</span>
+          >
+            {`${String(i + 1).padStart(2, '0')}: ${
+              voltage ? voltage.toFixed(3) : '\xa0-\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'
+            }`}
+          </span>
         ))}
       </CellsGrid>
     </SummaryContainer>
