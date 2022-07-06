@@ -37,12 +37,12 @@ export class JKBMS implements Device {
 
     DeviceLog.info(
       `Using protocol ${this.protocol.name}
-         commands: [
-           ${Object.values(this.protocol.commands)
-             .map(({ name }) => name)
-             .join(', ')}
-         ]
-      `,
+    commands: [
+        ${Object.values(this.protocol.commands)
+          .map(({ name }) => name)
+          .join(', ')}
+    ]
+`,
       {
         protocol: this.protocol,
       }

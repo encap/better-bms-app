@@ -16,7 +16,7 @@ type LogItemProps = {
 
 const LogItem = ({ log }: LogItemProps) => {
   const html = useMemo(
-    () => `&nbsp;<span>${LevelIconMap[log[1]]}</span>&nbsp;${ansiToHtml(log[2])}`,
+    () => `<span>${LevelIconMap[log[1]]}</span>&nbsp;${ansiToHtml(log[2])}`,
     [log]
   );
 
