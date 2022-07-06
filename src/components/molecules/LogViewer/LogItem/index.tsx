@@ -1,32 +1,45 @@
-import Convert from 'ansi-to-html';
-import React, { useMemo } from 'react';
+import { Tag } from '@geist-ui/core';
+import { ILogLevel } from 'js-logger';
+import React, { ComponentProps } from 'react';
+import { DefaultTheme, useTheme } from 'styled-components';
 import { LogType } from '..';
-import { LevelIconMap } from '../../../../utils/logger';
-import { ansiColorPalette, LogItemWrapper } from './styles';
+import { LOG_SCOPES } from '../../../../utils/logger';
+import { Date, LogItemWrapper, Message, StyledBadge, StyledTag } from './styles';
 
-const ConvertInstance = new Convert({
-  colors: ansiColorPalette,
-});
+const levelToTypeMap: Record<ILogLevel['name'], ComponentProps<typeof Tag>['type']> = {
+  error: 'error',
+  warn: 'warning',
+  info: 'success',
+  debug: 'secondary',
+};
 
-const ansiToHtml = ConvertInstance.toHtml.bind(ConvertInstance);
+const scopeToThemeMap: Record<LOG_SCOPES, keyof DefaultTheme> = {
+  [LOG_SCOPES.GLOBAL]: 'secondary',
+  [LOG_SCOPES.DEVICE]: 'successLight',
+  [LOG_SCOPES.DECODE]: 'cyanLight',
+  [LOG_SCOPES.UI]: 'warningLight',
+};
 
 type LogItemProps = {
   log: LogType;
 };
 
-const LogItem = ({ log }: LogItemProps) => {
-  const html = useMemo(
-    () => `<span>${LevelIconMap[log[1]]}</span>&nbsp;${ansiToHtml(log[2])}`,
-    [log]
-  );
+const LogItem = ({ log: [_key, date, level, scope, message] }: LogItemProps) => {
+  const theme = useTheme();
 
   return (
-    <LogItemWrapper
-      dangerouslySetInnerHTML={{
-        __html: html,
-      }}
-      className={log[1]}
-    ></LogItemWrapper>
+    <LogItemWrapper>
+      <Date>{date}</Date>
+      <StyledTag invert type={levelToTypeMap[level]}>
+        {level}
+      </StyledTag>
+      <StyledBadge style={{ backgroundColor: theme[scopeToThemeMap[scope]] }}>{scope}</StyledBadge>
+      <Message
+        dangerouslySetInnerHTML={{
+          __html: message,
+        }}
+      />
+    </LogItemWrapper>
   );
 };
 

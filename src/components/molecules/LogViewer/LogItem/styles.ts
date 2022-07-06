@@ -1,46 +1,39 @@
+import { Badge, Tag } from '@geist-ui/core';
 import styled from 'styled-components';
 
 export const LogItemWrapper = styled.p`
   width: 100%;
   position: relative;
   font-size: 14px;
-  white-space: pre-wrap;
-  margin: 2px 0;
-  padding: 2px 2px;
-
-  & > span {
-    display: inline-block;
-    border-radius: 4px;
-
-    &:last-of-type {
-      display: block;
-    }
-  }
-
-  &.error {
-    background: rgba(255, 0, 0, 0.2);
-  }
-
-  &.warn {
-    background: rgba(244, 189, 18, 0.2);
-  }
+  margin: 4px 0;
+  display: flex;
+  gap: 0 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
 `;
 
-export const ansiColorPalette = {
-  0: 'rgb(17, 17, 17)',
-  1: 'rgb(236, 77, 76)',
-  2: 'rgb(30, 200, 18)',
-  3: 'rgb(210, 192, 89)',
-  4: '#00A',
-  5: '#A0A',
-  6: 'rgb(26, 181, 203)',
-  7: '#AAA',
-  8: '#555',
-  9: '#F55',
-  10: '#5F5',
-  11: '#FF5',
-  12: '#55F',
-  13: '#F5F',
-  14: '#5FF',
-  15: '#FFF',
-};
+export const StyledTag = styled(Tag)`
+  padding: 2px 10px !important;
+  min-width: 70px;
+  text-align: center;
+  height: auto !important;
+  color: white !important;
+`;
+
+export const StyledBadge = styled(Badge)`
+  padding: 4px 10px !important;
+  min-width: 70px;
+  text-align: center;
+`;
+
+export const Date = styled.span`
+  color: ${({ theme }) => theme.accents_4};
+  width: 90px;
+`;
+
+export const Message = styled.span`
+  white-space: pre-wrap;
+  display: block;
+  width: 100%;
+  line-height: 1.15;
+`;
