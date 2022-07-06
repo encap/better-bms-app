@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { ChartData, ChartOptions, TimeScale, Chart } from 'chart.js';
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartData,
+  ChartOptions,
+  TimeScale,
+} from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { Data } from '../../../interfaces/data';
 import 'chartjs-adapter-date-fns';
@@ -12,6 +24,7 @@ import dayjs from 'dayjs';
 import { useTheme } from 'styled-components';
 Chart.register(ChartStreaming);
 Chart.register(TimeScale);
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export const options: ChartOptions<'line'> = {
   responsive: true,
@@ -166,7 +179,7 @@ export function LineChart({ currentData }: LineChartProps) {
         },
       ],
     }),
-    []
+    [theme]
   );
 
   useEffect(() => {
