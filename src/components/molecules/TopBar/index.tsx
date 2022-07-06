@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Data } from '../../../interfaces/data';
 import { useDevice } from '../../organisms/providers/DeviceProvider';
+import { QuickTogglesContainer } from '../QuickToggles/styles';
 import {
   DeviceStatusText as DeviceStatusTitle,
   PingContainer,
@@ -29,20 +30,23 @@ const TopBar = ({ data }: TopBarProps) => {
   }, [device, status]);
 
   return (
-    <TopBarContainer>
-      {status === 'connected' && data?.deviceInfo?.firmwareVersion && (
-        <SmallText>{data.deviceInfo.firmwareVersion}</SmallText>
-      )}
-      <DeviceStatusTitle onClick={handleStatusClick}>
-        {status === 'disconnected' ? `Click anywhere to connect` : status}
-      </DeviceStatusTitle>
-      {status === 'connected' && data?.timeSinceLastOne && (
-        <PingContainer>
-          <SmallText>{`${String(data?.timeSinceLastOne)}ms`}</SmallText>
-          <PingDot heartbeat={heartbeatToggle.current} />
-        </PingContainer>
-      )}
-    </TopBarContainer>
+    <>
+      <TopBarContainer>
+        {status === 'connected' && data?.deviceInfo?.firmwareVersion && (
+          <SmallText>{data.deviceInfo.firmwareVersion}</SmallText>
+        )}
+        <DeviceStatusTitle onClick={handleStatusClick}>
+          {status === 'disconnected' ? `Click anywhere to connect` : status}
+        </DeviceStatusTitle>
+        {status === 'connected' && data?.timeSinceLastOne && (
+          <PingContainer>
+            <SmallText>{`${String(data?.timeSinceLastOne)}ms`}</SmallText>
+            <PingDot heartbeat={heartbeatToggle.current} />
+          </PingContainer>
+        )}
+      </TopBarContainer>
+      <QuickTogglesContainer />
+    </>
   );
 };
 

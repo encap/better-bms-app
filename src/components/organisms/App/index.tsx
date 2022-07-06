@@ -11,6 +11,7 @@ import { DeviceIdentificator } from '../../../interfaces/device';
 import { UILog } from '../../../utils/logger';
 import BottomNavigation from '../../molecules/BottomNavigation';
 import LogViewer from '../../molecules/LogViewer';
+import QuickToggles from '../../molecules/QuickToggles';
 import TopBar from '../../molecules/TopBar';
 import { useDevice } from '../providers/DeviceProvider';
 import Summary from '../Summary';
@@ -119,6 +120,7 @@ const App = () => {
   return (
     <AppContainer onClick={handleClickAnywhere}>
       <TopBar data={data} />
+      {status === 'connected' && <QuickToggles />}
 
       <ContentContainer>
         <Freeze freeze={selectedScreen !== 'Logs'}>
