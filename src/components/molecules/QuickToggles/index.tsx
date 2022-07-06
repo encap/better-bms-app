@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { QuickTogglesContainer, ToggleWithLabel } from './styles';
 
 type QuickTogglesProps = {
@@ -14,4 +15,4 @@ const QuickToggles = ({}: QuickTogglesProps) => {
   );
 };
 
-export default QuickToggles;
+export default memo(QuickToggles);

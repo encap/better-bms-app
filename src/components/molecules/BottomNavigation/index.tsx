@@ -1,4 +1,5 @@
 import { Tabs } from '@geist-ui/core';
+import { memo } from 'react';
 import { Screens } from '../../organisms/App';
 import { useDevice } from '../../organisms/providers/DeviceProvider';
 import { BottomNavigationContainer } from './styles';
@@ -23,4 +24,4 @@ const BottomNavigation = ({ selectedScreen, setSelectedScreen }: BottomNavigatio
   );
 };
 
-export default BottomNavigation;
+export default memo(BottomNavigation);
