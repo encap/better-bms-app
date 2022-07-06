@@ -18,5 +18,9 @@ export const ContentContainer = styled.main`
   overflow-y: auto;
   max-height: 100%;
   flex-basis: 0;
-  padding: 16px 16px;
+  margin: 16px 0 0;
+  padding: 0 16px 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 `;
