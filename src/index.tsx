@@ -1,17 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
+import './index.scss';
 import reportWebVitals from './reportWebVitals';
 import { setupLogger } from './utils/logger';
+import DeviceProvider from './components/organisms/providers/DeviceProvider';
+import App from './components/organisms/App';
 setupLogger();
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   // <React.StrictMode>
-  <App />
+  <DeviceProvider>
+    <App />
+  </DeviceProvider>
   // </React.StrictMode>
 );
 

@@ -1,6 +1,30 @@
 import styled from 'styled-components';
 
-export const TwoColumnGrid = styled.div`
+export const SummaryContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const MainInfoContainer = styled.div`
+  display: grid;
+  gap: 0px;
+`;
+
+export const MainInfo = styled.h3`
+  text-align: center;
+  font-size: 70px;
+`;
+
+export const MainInfoUnit = styled.span`
+  font-size: 30px;
+  max-width: 1ch;
+  display: inline-block;
+  overflow: visible;
+`;
+
+export const InfoGrid = styled.div`
   margin: 16px 0;
   display: grid;
   grid-template-columns: 1fr 50px 1fr 50px;

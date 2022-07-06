@@ -1,5 +1,5 @@
 import Logger, { ILogLevel } from 'js-logger';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { consoleHandler, GlobalLog, UILog } from '../../../utils/logger';
 import LogItem from './LogItem';
 import { LogCount, LogViewerContainer, ScrollContainer } from './styles';
@@ -74,4 +74,4 @@ const LogViewer = () => {
   );
 };
 
-export default LogViewer;
+export default memo(LogViewer);

@@ -1,0 +1,66 @@
+*, *::before,  *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
+  background: black;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  outline: 1px solid #111;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+a,
+p,
+textarea,
+select,
+input,
+button {
+    font-family: inherit;
+}
+
+fieldset,
+legend {
+    appearance: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+}
