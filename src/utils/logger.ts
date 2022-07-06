@@ -1,6 +1,6 @@
 import { ChalkInstance, Chalk } from 'chalk';
 import dayjs from 'dayjs';
-import Logger, { ILogHandler, ILogLevel } from 'js-logger';
+import Logger, { ILogHandler } from 'js-logger';
 
 export const chalk = new Chalk({
   level: 1,
@@ -13,20 +13,13 @@ export enum LOG_SCOPES {
   UI = '  ui  ',
 }
 
-export const LevelIconMap: Record<ILogLevel['name'], string> = {
-  error: '🚨',
-  warn: '⚠️',
-  info: 'ℹ️',
-  debug: '🐞',
-};
-
 export const SCOPES_COLOR_MAP: Record<
   LOG_SCOPES,
   [keyof ChalkInstance, keyof ChalkInstance['reset']]
 > = {
   [LOG_SCOPES.GLOBAL]: ['bgBlack', 'white'],
-  [LOG_SCOPES.DEVICE]: ['bgCyan', 'black'],
-  [LOG_SCOPES.DECODE]: ['bgGreen', 'black'],
+  [LOG_SCOPES.DEVICE]: ['bgBlueBright', 'black'],
+  [LOG_SCOPES.DECODE]: ['bgCyanBright', 'black'],
   [LOG_SCOPES.UI]: ['bgYellow', 'black'],
 };
 
@@ -53,12 +46,10 @@ export const consoleHandler = (
   }
 
   // Browsers have their own icon for warn and error (and sometimes for others too)
-  const firstMessageWithEmoji = ['INFO', 'DEBUG'].includes(context.level.name)
-    ? `${LevelIconMap[context.level.name.toLowerCase()]} ${messages[0]}`
-    : messages[0];
+  const level = context.level.name.toLowerCase();
 
   // @ts-ignore
-  console[context.level.name.toLowerCase()](firstMessageWithEmoji, ...messages.slice(1));
+  console[level](...messages);
 
   return {
     date,
@@ -84,7 +75,7 @@ export function setupLogger() {
   Logger.setHandler(consoleHandler);
 
   DeviceLog.setLevel(Logger.INFO);
-  DecodeLog.setLevel(Logger.WARN);
+  DecodeLog.setLevel(Logger.INFO);
 
   Logger.info('Logger ready');
 }

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { Pause } from '@geist-ui/icons';
 
 export const ChartContainer = styled.div`
   position: relative;
@@ -18,10 +19,8 @@ export const ChartClickArea = styled.div`
   pointer-events: all;
 `;
 
-export const PauseIndicator = styled.div`
+export const PauseIndicator = styled(Pause)`
   position: absolute;
   right: 20px;
   top: -2px;
-  font-size: 16px;
-  color: rgb(236, 77, 76);
 `;

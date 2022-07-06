@@ -8,8 +8,8 @@ type QuickTogglesProps = {
 const QuickToggles = ({}: QuickTogglesProps) => {
   return (
     <QuickTogglesContainer>
-      <ToggleWithLabel scale={3} data-label='Charge' />
-      <ToggleWithLabel scale={3} type='error' data-label='Discharge' />
+      <ToggleWithLabel initialChecked scale={3} data-label='Charge' />
+      <ToggleWithLabel initialChecked scale={3} type='error' data-label='Discharge' />
     </QuickTogglesContainer>
   );
 };

@@ -5,19 +5,30 @@ import reportWebVitals from './reportWebVitals';
 import { setupLogger } from './utils/logger';
 import DeviceProvider from './components/organisms/providers/DeviceProvider';
 import App from './components/organisms/App';
-import { CssBaseline, GeistProvider } from '@geist-ui/core';
+import { CssBaseline, GeistProvider, Themes } from '@geist-ui/core';
+import { ThemeProvider } from 'styled-components';
+
+const customDarkTheme = Themes.createFromDark({
+  type: 'customDark',
+});
+
+export const darkTheme = () => customDarkTheme.palette;
+
+const geistThemes = [customDarkTheme];
 
 setupLogger();
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   // <React.StrictMode>
-  <GeistProvider themeType={'dark'}>
-    <CssBaseline />
-    <DeviceProvider>
-      <App />
-    </DeviceProvider>
-  </GeistProvider>
+  <ThemeProvider theme={customDarkTheme.palette}>
+    <GeistProvider themeType={'customDark'} themes={geistThemes}>
+      <CssBaseline />
+      <DeviceProvider>
+        <App />
+      </DeviceProvider>
+    </GeistProvider>
+  </ThemeProvider>
   // </React.StrictMode>
 );
 

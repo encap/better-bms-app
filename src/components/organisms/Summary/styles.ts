@@ -57,9 +57,9 @@ export const CellsGrid = styled.div`
   grid-template-rows: repeat(8, auto);
 
   .highest {
-    color: rgb(26, 181, 203);
+    color: ${({ theme }) => theme.error};
   }
   .lowest {
-    color: rgb(236, 77, 76);
+    color: ${({ theme }) => theme.success};
   }
 `;

@@ -1,19 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartData,
-  ChartOptions,
-  TimeScale,
-  Chart,
-} from 'chart.js';
-Chart.register(TimeScale);
+import { ChartData, ChartOptions, TimeScale, Chart } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { Data } from '../../../interfaces/data';
 import 'chartjs-adapter-date-fns';
@@ -23,9 +9,9 @@ import { ChartClickArea, ChartContainer, PauseIndicator } from './styles';
 import { UILog } from '../../../utils/logger';
 import { useLongPress, LongPressDetectEvents } from 'use-long-press';
 import dayjs from 'dayjs';
+import { useTheme } from 'styled-components';
 Chart.register(ChartStreaming);
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+Chart.register(TimeScale);
 
 export const options: ChartOptions<'line'> = {
   responsive: true,
@@ -90,6 +76,7 @@ type Datum = {
 export function LineChart({ currentData }: LineChartProps) {
   const chartRef = useRef<ChartJSOrUndefined<'line', Datum[]>>();
   const pauseTimestamp = useRef<number | null>(null);
+  const theme = useTheme();
 
   const handleLongPress = useCallback(() => {
     UILog.log(`Reset chart on long press`, {
@@ -158,7 +145,7 @@ export function LineChart({ currentData }: LineChartProps) {
         {
           label: 'Voltage',
           data: [],
-          borderColor: 'rgb(26, 181, 203)',
+          borderColor: theme.success,
           backgroundColor: 'none',
           parsing: {
             xAxisKey: 'timestamp',
@@ -169,7 +156,7 @@ export function LineChart({ currentData }: LineChartProps) {
         {
           label: 'Current',
           data: [],
-          borderColor: 'rgb(236, 77, 76)',
+          borderColor: theme.error,
           backgroundColor: 'none',
           parsing: {
             xAxisKey: 'timestamp',
@@ -199,7 +186,9 @@ export function LineChart({ currentData }: LineChartProps) {
     <ChartContainer>
       <Line options={options} data={data} ref={chartRef} />
       <ChartClickArea {...bindLongPress()} onClick={handleChartClick} />
-      {pauseTimestamp.current && <PauseIndicator onClick={handleChartClick}>{'⏸'}</PauseIndicator>}
+      {pauseTimestamp.current && (
+        <PauseIndicator onClick={handleChartClick} color={theme.warning} size={24} />
+      )}
     </ChartContainer>
   );
 }

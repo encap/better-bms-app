@@ -1,10 +1,10 @@
 import Logger, { ILogLevel } from 'js-logger';
 import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { consoleHandler, GlobalLog, UILog } from '../../../utils/logger';
+import { consoleHandler, GlobalLog, LOG_SCOPES, UILog } from '../../../utils/logger';
 import LogItem from './LogItem';
 import { LogCount, LogViewerContainer, ScrollContainer } from './styles';
 
-export type LogType = [number, ILogLevel['name'], string];
+export type LogType = [number, string, ILogLevel['name'], LOG_SCOPES, string];
 
 const LogViewer = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -12,10 +12,10 @@ const LogViewer = () => {
   const [logs, setLogs] = useState<LogType[]>(() => []);
 
   const addLog = useCallback(
-    (level: string, message: string) => {
+    (date: string, level: ILogLevel['name'], scope: LOG_SCOPES, message: string) => {
       setLogs((current) => {
         const key = (current[current.length - 1]?.[0] || 0) + 1;
-        const log = [key, level, message] as LogType;
+        const log = [key, date, level, scope, message] as LogType;
 
         if (current.length > 10000) {
           try {
@@ -42,9 +42,9 @@ const LogViewer = () => {
     GlobalLog.log('Initializing Log viewer');
 
     Logger.setHandler((originalMessages, context) => {
-      const { messages } = consoleHandler(originalMessages, context);
+      const { date, scope } = consoleHandler(originalMessages, context);
 
-      addLog(context.level.name.toLowerCase(), messages[0]);
+      addLog(date, context.level.name.toLowerCase(), scope, originalMessages[0].toString());
     });
 
     GlobalLog.log('Log Viewer initialized');
@@ -56,15 +56,23 @@ const LogViewer = () => {
     }
   }, [logs]);
 
+  const handleTouchStart = useCallback(() => {
+    shouldScrollRef.current = false;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    setTimeout(() => (shouldScrollRef.current = true), 5000);
+  }, []);
+
   return (
     <LogViewerContainer>
-      <LogCount>{`Logs: ${logs.length}`}</LogCount>
+      <LogCount>{`Log count: ${logs.length}`}</LogCount>
       <ScrollContainer
         ref={scrollContainerRef}
-        onTouchStart={() => (shouldScrollRef.current = false)}
-        onTouchEnd={() => setTimeout(() => (shouldScrollRef.current = true), 2000)}
-        onMouseDown={() => (shouldScrollRef.current = false)}
-        onMouseUp={() => setTimeout(() => (shouldScrollRef.current = true), 2000)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseUp={handleTouchEnd}
       >
         {logs.map((log) => (
           <LogItem log={log} key={log[0]} />
