@@ -15,6 +15,7 @@ export const MainInfoContainer = styled.div`
 export const MainInfo = styled.h3`
   text-align: center;
   font-size: 70px;
+  font-weight: 500;
 `;
 
 export const MainInfoUnit = styled.span`
@@ -22,6 +23,7 @@ export const MainInfoUnit = styled.span`
   max-width: 1ch;
   display: inline-block;
   overflow: visible;
+  font-weight: 600;
 `;
 
 export const InfoGrid = styled.div`
