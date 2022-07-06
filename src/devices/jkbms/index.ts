@@ -86,7 +86,7 @@ export class JKBMS implements Device {
     let device: BluetoothDevice | null = null;
 
     try {
-      if (options?.previous && navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
+      if (options?.previous && navigator.platform !== 'Linux x86_64') {
         DeviceLog.debug(`Previous device option set ${options.previous.name}`, {
           previous: options.previous,
         });
