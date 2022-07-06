@@ -34,11 +34,14 @@ body {
 
 #root {
   min-height: 100vh;
+  max-height: 100vh;
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
   outline: 1px solid #111;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  positino: relative;
 }
 
 code {

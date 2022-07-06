@@ -9,11 +9,10 @@ export const LogViewerContainer = styled.div`
 
 export const LogCount = styled.h6`
   width: 100%;
-  text-align: right;
+  text-align: left;
 `;
 
 export const ScrollContainer = styled.div`
   width: 100%;
-  max-height: 80vh;
   overflow-y: scroll;
 `;

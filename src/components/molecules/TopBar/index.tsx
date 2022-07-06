@@ -24,7 +24,7 @@ const TopBar = ({ data }: TopBarProps) => {
 
   const handleStatusClick = useCallback(() => {
     if (status !== 'disconnected') {
-      device?.disconnect();
+      device?.disconnect('user');
     }
   }, [device, status]);
 

@@ -9,12 +9,14 @@ export type DeviceIdentificator = DeepReadonly<{
 
 export type DeviceStatus = 'disconnected' | 'scanning' | 'connecting' | 'connected' | 'paused';
 
+export type DisconnectReasons = 'inactivity' | 'error' | 'reset' | 'external' | 'user';
+
 export type DeviceCallbacks = {
-  onPreviousUnaviable?(device: BluetoothDevice | null): void;
+  onPreviousUnavailable?(device: BluetoothDevice | null): void;
   onRequestDeviceError?(error: Error): void;
   onStatusChange?(status: DeviceStatus): void;
   onConnected?(deviceIdentificator: DeviceIdentificator): void;
-  onDisconnected?(): void;
+  onDisconnected?(reason: DisconnectReasons): void;
   onError?(error: Error): void;
   onDataChange(data: Data): void;
 };
@@ -32,7 +34,7 @@ export interface Device {
 
   connect(options?: ConnectOptions): Promise<DeviceIdentificator | null>;
 
-  disconnect(): Promise<void>;
+  disconnect(reason: DisconnectReasons): Promise<void>;
 
   pause(): Promise<void>;
 }

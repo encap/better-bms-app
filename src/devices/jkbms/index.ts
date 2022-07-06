@@ -9,6 +9,7 @@ import {
   DeviceCallbacks,
   DeviceIdentificator,
   DeviceStatus,
+  DisconnectReasons,
 } from '../../interfaces/device';
 import { CommandDefinition, ProtocolSpecification } from '../../interfaces/protocol';
 import { wait } from '../../utils';
@@ -135,7 +136,7 @@ export class JKBMS implements Device {
       });
       DeviceLog.log(`Connected to ${device.name}`, { device, server });
 
-      device.addEventListener('gattserverdisconnected', this.disconnect.bind(this));
+      device.addEventListener('gattserverdisconnected', () => this.disconnect('external'));
       this.registerActivity();
 
       if (!server) {
@@ -203,13 +204,13 @@ export class JKBMS implements Device {
         error?.message || `Error connecting and initializing device ${device.name}`,
         { device, error }
       );
-      this.disconnect();
+      this.disconnect('error');
       this.callbacks.onRequestDeviceError?.(error as Error);
       return null;
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(reason: DisconnectReasons): Promise<void> {
     if (this.status === 'disconnected' || !this.bluetoothDevice) {
       DeviceLog.warn(`Device already disconnected`, this);
 
@@ -217,15 +218,21 @@ export class JKBMS implements Device {
     }
 
     try {
-      DeviceLog.log(`Trying to disconnet device ${this.bluetoothDevice?.name}`, this);
-      await this.characteristic?.stopNotifications().catch((error) => {
-        console.warn(error);
-      });
-      await wait(100);
-      this.bluetoothDevice?.gatt?.disconnect();
-      await wait(100);
+      DeviceLog.log(
+        `Trying to disconnet device ${this.bluetoothDevice?.name}. Reason: ${reason}`,
+        this
+      );
 
-      this.callbacks?.onDisconnected?.();
+      if (reason !== 'external') {
+        await this.characteristic?.stopNotifications().catch((error) => {
+          console.warn(error);
+        });
+        await wait(100);
+        this.bluetoothDevice?.gatt?.disconnect();
+        await wait(100);
+      }
+
+      this.callbacks?.onDisconnected?.(reason);
 
       this.reset();
     } catch (error) {
@@ -305,7 +312,7 @@ export class JKBMS implements Device {
           matchedDevice,
           isMatchedDeviceInRange,
         });
-        this.callbacks.onPreviousUnaviable?.(matchedDevice);
+        this.callbacks.onPreviousUnavailable?.(matchedDevice);
 
         return null;
       }
@@ -323,7 +330,7 @@ export class JKBMS implements Device {
       matchedDevice,
     });
 
-    this.callbacks.onPreviousUnaviable?.(null);
+    this.callbacks.onPreviousUnavailable?.(null);
 
     return null;
   }
@@ -351,7 +358,7 @@ export class JKBMS implements Device {
     }
     this.inactivityTimeout = setTimeout(() => {
       DeviceLog.warn(`Disconnecting ${this.deviceIdenticator?.name} due to inactivity`);
-      this.disconnect();
+      this.disconnect('inactivity');
     }, this.protocol.inactivityTimeout);
 
     return this.inactivityTimeout;
@@ -385,7 +392,7 @@ export class JKBMS implements Device {
       DeviceLog.error(`Can't start notifications and/or send commands`, {
         error,
       });
-      this.disconnect();
+      this.disconnect('error');
       this.callbacks.onError?.(error as Error);
     }
   }

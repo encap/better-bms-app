@@ -1,3 +1,4 @@
+import { Grid, Loading, useToasts } from '@geist-ui/core';
 import { useCallback, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
 import { useLocalStorage } from 'react-use';
@@ -8,13 +9,14 @@ import { useWakelock } from '../../../hooks/useWakelock';
 import { Data } from '../../../interfaces/data';
 import { DeviceIdentificator } from '../../../interfaces/device';
 import { UILog } from '../../../utils/logger';
+import BottomNavigation from '../../molecules/BottomNavigation';
 import LogViewer from '../../molecules/LogViewer';
 import TopBar from '../../molecules/TopBar';
 import { useDevice } from '../providers/DeviceProvider';
 import Summary from '../Summary';
-import { AppContainer } from './styles';
+import { AppContainer, ContentContainer } from './styles';
 
-type Screen = 'Summary' | 'Logs' | 'Settings' | 'Charts';
+export type Screens = 'Logs' | 'Summary' | 'Settings' | 'Details';
 
 const App = () => {
   const [previousDevice, setPreviousDevice] = useLocalStorage<DeviceIdentificator | null>(
@@ -25,9 +27,11 @@ const App = () => {
   const { device, status, setDevice, setStatus } = useDevice();
   const { acquireWakelock, releaseWakelock } = useWakelock();
 
+  const { setToast } = useToasts();
+
   const [data, setData] = useState<Data | null>(null);
 
-  const [screen, setScreen] = useState<Screen>('Logs');
+  const [selectedScreen, setSelectedScreen] = useState<Screens>('Logs');
 
   useEffect(() => {
     UILog.info('App rendered');
@@ -57,27 +61,50 @@ const App = () => {
       async onConnected(deviceIdentificator) {
         setPreviousDevice(deviceIdentificator);
         acquireWakelock();
-        setScreen('Summary');
+        setSelectedScreen('Summary');
       },
-      onDisconnected() {
+      onDisconnected(reason) {
+        if (reason === 'inactivity') {
+          setToast({
+            type: 'warning',
+            text: `Disconnected, Reason: ${reason}`,
+            delay: 2000,
+          });
+        }
+
         // setData(null);
         releaseWakelock();
       },
       onError(error) {
         console.error(error);
+        setToast({
+          type: 'error',
+          text: error?.message,
+          delay: 2000,
+        });
       },
       onRequestDeviceError(error) {
         console.error(error);
+        // setToast({
+        //   type: 'error',
+        //   text: error?.message,
+        //   delay: 2000,
+        // });
       },
-      onPreviousUnaviable() {
+      onPreviousUnavailable() {
         setPreviousDevice(null);
+        setToast({
+          type: 'warning',
+          text: `Previous device unavailable. Tap again.`,
+          delay: 3000,
+        });
       },
     });
 
     setDevice(newDevice);
 
     return () => {
-      newDevice.disconnect();
+      newDevice.disconnect('reset');
     };
   }, []);
 
@@ -91,23 +118,40 @@ const App = () => {
 
   return (
     <AppContainer onClick={handleClickAnywhere}>
-      <>
-        <TopBar data={data} />
+      <TopBar data={data} />
 
-        <Freeze freeze={screen !== 'Logs'}>
+      <ContentContainer>
+        <Freeze freeze={selectedScreen !== 'Logs'}>
           <LogViewer />
         </Freeze>
 
         {(() => {
-          switch (screen) {
-            case 'Summary': {
-              if (data?.batteryData?.voltage) {
+          if (data?.batteryData?.voltage) {
+            switch (selectedScreen) {
+              case 'Summary': {
                 return <Summary data={data as DeepRequired<Data>} />;
               }
             }
+          } else {
+            <Grid.Container gap={2.5}>
+              <Grid xs={24}>
+                <Loading type='success' spaceRatio={2} />
+              </Grid>
+              <Grid xs={24}>
+                <Loading type='secondary' spaceRatio={2} />
+              </Grid>
+              <Grid xs={24}>
+                <Loading type='warning' spaceRatio={2} />
+              </Grid>
+              <Grid xs={24}>
+                <Loading type='error' spaceRatio={2} />
+              </Grid>
+            </Grid.Container>;
           }
         })()}
-      </>
+      </ContentContainer>
+
+      <BottomNavigation selectedScreen={selectedScreen} setSelectedScreen={setSelectedScreen} />
     </AppContainer>
   );
 };
