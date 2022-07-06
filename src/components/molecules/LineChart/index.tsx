@@ -19,7 +19,7 @@ import { Data } from '../../../interfaces/data';
 import 'chartjs-adapter-date-fns';
 import ChartStreaming from 'chartjs-plugin-streaming';
 import { ChartJSOrUndefined } from 'react-chartjs-2/dist/types';
-import { ChartClickArea, ChartContainer } from './styles';
+import { ChartClickArea, ChartContainer, PauseIndicator } from './styles';
 import { UILog } from '../../../utils/logger';
 import { useLongPress, LongPressDetectEvents } from 'use-long-press';
 import dayjs from 'dayjs';
@@ -199,6 +199,7 @@ export function LineChart({ currentData }: LineChartProps) {
     <ChartContainer>
       <Line options={options} data={data} ref={chartRef} />
       <ChartClickArea {...bindLongPress()} onClick={handleChartClick} />
+      {pauseTimestamp.current && <PauseIndicator onClick={handleChartClick}>{'⏸'}</PauseIndicator>}
     </ChartContainer>
   );
 }

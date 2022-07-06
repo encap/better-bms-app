@@ -17,3 +17,11 @@ export const ChartClickArea = styled.div`
   border-radius: 50%;
   pointer-events: all;
 `;
+
+export const PauseIndicator = styled.div`
+  position: absolute;
+  right: 20px;
+  top: -2px;
+  font-size: 16px;
+  color: rgb(236, 77, 76);
+`;
