@@ -24,7 +24,7 @@ type LogItemProps = {
   log: LogType;
 };
 
-const LogItem = ({ log: [_key, date, level, scope, message] }: LogItemProps) => {
+const LogItem = ({ log: [, date, level, scope, message] }: LogItemProps) => {
   const theme = useTheme();
 
   return (

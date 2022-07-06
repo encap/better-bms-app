@@ -8,7 +8,8 @@ export type LogType = [number, string, ILogLevel['name'], LOG_SCOPES, string];
 
 const LogViewer = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const shouldScrollRef = useRef(true);
+  const scrollLockTimeout = useRef<ReturnType<typeof setTimeout> | null | undefined>(undefined);
+  const ignoreScrolls = useRef<number>(0);
   const [logs, setLogs] = useState<LogType[]>(() => []);
 
   const addLog = useCallback(
@@ -51,29 +52,28 @@ const LogViewer = () => {
   }, []);
 
   useLayoutEffect(() => {
-    if (shouldScrollRef.current && scrollContainerRef.current) {
+    if (typeof scrollLockTimeout.current !== 'number' && scrollContainerRef.current) {
+      ignoreScrolls.current += 1;
       scrollContainerRef.current.scrollTo(0, scrollContainerRef.current.scrollHeight);
     }
   }, [logs]);
 
-  const handleTouchStart = useCallback(() => {
-    shouldScrollRef.current = false;
-  }, []);
+  const handleScroll = useCallback<React.UIEventHandler<HTMLDivElement>>(() => {
+    if (ignoreScrolls.current === 0) {
+      if (scrollLockTimeout.current) {
+        clearTimeout(scrollLockTimeout.current);
+      }
 
-  const handleTouchEnd = useCallback(() => {
-    setTimeout(() => (shouldScrollRef.current = true), 5000);
+      scrollLockTimeout.current = setTimeout(() => (scrollLockTimeout.current = null), 10000);
+    } else if (ignoreScrolls.current > 0) {
+      ignoreScrolls.current -= 1;
+    }
   }, []);
 
   return (
     <LogViewerContainer>
       <LogCount>{`Log count: ${logs.length}`}</LogCount>
-      <ScrollContainer
-        ref={scrollContainerRef}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
-      >
+      <ScrollContainer ref={scrollContainerRef} onScroll={handleScroll}>
         {logs.map((log) => (
           <LogItem log={log} key={log[0]} />
         ))}
