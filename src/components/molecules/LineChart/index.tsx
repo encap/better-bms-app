@@ -54,6 +54,16 @@ export const options: ChartOptions<'line'> = {
       suggestedMax: 50,
       beginAtZero: true,
     },
+    y2: {
+      type: 'linear',
+      display: false,
+      position: 'right',
+      grid: {
+        drawOnChartArea: false,
+      },
+      min: 200,
+      max: 600,
+    },
   },
   elements: {
     point: {
@@ -84,6 +94,7 @@ type Datum = {
   timestamp: number;
   voltage: number;
   current: number;
+  ping: number;
 } | null;
 
 export function LineChart({ liveData }: LineChartProps) {
@@ -177,6 +188,18 @@ export function LineChart({ liveData }: LineChartProps) {
           },
           yAxisID: 'y1',
         },
+        {
+          label: 'Ping',
+          data: [],
+          borderColor: '#171717',
+          borderWidth: 1,
+          backgroundColor: 'none',
+          parsing: {
+            xAxisKey: 'timestamp',
+            yAxisKey: 'ping',
+          },
+          yAxisID: 'y2',
+        },
       ],
     }),
     [theme]
@@ -188,6 +211,7 @@ export function LineChart({ liveData }: LineChartProps) {
         timestamp: liveData.timestamp,
         voltage: liveData?.voltage,
         current: Math.abs(liveData?.current),
+        ping: liveData.timeSinceLastOne,
       };
 
       chartRef.current.data.datasets.forEach((dataset) => dataset.data.push(datum));
