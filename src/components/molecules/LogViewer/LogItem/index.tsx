@@ -15,8 +15,8 @@ const levelToTypeMap: Record<ILogLevel['name'], ComponentProps<typeof Tag>['type
 
 const scopeToThemeMap: Record<LOG_SCOPES, keyof DefaultTheme> = {
   [LOG_SCOPES.GLOBAL]: 'secondary',
-  [LOG_SCOPES.DEVICE]: 'successLight',
-  [LOG_SCOPES.DECODE]: 'cyanLight',
+  [LOG_SCOPES.DEVICE]: 'cyanLight',
+  [LOG_SCOPES.DECODE]: 'selection',
   [LOG_SCOPES.UI]: 'warningLight',
 };
 

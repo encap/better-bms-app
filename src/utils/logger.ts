@@ -18,8 +18,8 @@ export const SCOPES_COLOR_MAP: Record<
   [keyof ChalkInstance, keyof ChalkInstance['reset']]
 > = {
   [LOG_SCOPES.GLOBAL]: ['bgBlack', 'white'],
-  [LOG_SCOPES.DEVICE]: ['bgBlueBright', 'black'],
-  [LOG_SCOPES.DECODE]: ['bgCyanBright', 'black'],
+  [LOG_SCOPES.DEVICE]: ['bgCyanBright', 'black'],
+  [LOG_SCOPES.DECODE]: ['bgMagentaBright', 'black'],
   [LOG_SCOPES.UI]: ['bgYellow', 'black'],
 };
 
