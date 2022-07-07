@@ -393,11 +393,10 @@ export class JKBMS implements Device {
 
       await this.characteristic.startNotifications();
       await wait(200);
+      // Sending these two commands start live data notifications
       await this.sendCommand(JKBMS_COMMANDS.GET_SETTINGS);
-      DeviceLog.info(`Listening for cell data notifications`);
-      DeviceLog.info(`Queuing Get device info`);
-      await wait(500);
       await this.sendCommand(JKBMS_COMMANDS.GET_DEVICE_INFO);
+      DeviceLog.info(`Listening for cell data notifications`);
     } catch (error) {
       // @ts-ignore
       DeviceLog.error(error.message);
@@ -447,10 +446,12 @@ export class JKBMS implements Device {
 
     clearTimeout(timeout);
 
-    DeviceLog.debug(`Waiting ${command.wait}ms before ready for next command`, {
-      command,
-    });
-    await wait(command.wait);
+    if (command.wait) {
+      DeviceLog.debug(`Waiting ${command.wait}ms before ready for next command`, {
+        command,
+      });
+      await wait(command.wait);
+    }
   }
 
   private constructCommandPayload(command: Required<CommandDefinition>): Uint8Array {
@@ -485,10 +486,8 @@ export class JKBMS implements Device {
     const valueArray = new Uint8Array(value.buffer);
 
     DeviceLog.debug(
-      chalk.bgCyan.black(
-        // @ts-ignore
-        ` Received notification from ${event.target?.service?.device?.name} (${value.byteLength} bytes) `
-      ),
+      // @ts-ignore
+      `===== Received notification from ${event.target?.service?.device?.name} (${value.byteLength} bytes) =====`,
       { event, value, responseBuffer: this.responseBuffer, it: this }
     );
 

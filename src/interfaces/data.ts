@@ -75,6 +75,7 @@ export type LiveData = CommonData & {
 export type SettingsData = CommonData & {
   charge: boolean;
   discharge: boolean;
+  balance?: boolean;
   ovp: Units['volts'];
   ovpr?: Units['volts'];
   uvp: Units['volts'];

@@ -76,6 +76,8 @@ export function unpackDataItemDescription<T extends ResponseDataTypes>(
   const type: DataItemTypes =
     packedItem[indexes.valueType] === 'raw'
       ? 'raw'
+      : packedItem[indexes.valueType] === 'boolean'
+      ? 'boolean'
       : typeof packedItem[indexes.valueType] === 'string'
       ? 'text'
       : 'numeric';
@@ -108,6 +110,9 @@ export function unpackDataItemDescription<T extends ResponseDataTypes>(
         },
       };
       break;
+    }
+    case 'boolean': {
+      properties = {};
     }
   }
 

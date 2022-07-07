@@ -136,6 +136,23 @@ export const JKBMS_PROTOCOL: PackedProtocolSpecification<JKBMS_COMMANDS> = {
         [93, 'unknownSegments', 'raw', null],
       ],
     },
+    {
+      name: 'SETTINGS',
+      dataType: 'SETTINGS',
+      signature: new Uint8Array([0x01]),
+      length: 300,
+      items: [
+        ...responseHeaderWithTypeAndCounter,
+        [2, 'unknownSegments', 'raw', null],
+        [110, 'unknownSegments', 'raw', null],
+        [1, 'charge', 'boolean'],
+        [3, 'unknownSegments', 'raw', null],
+        [1, 'discharge', 'boolean'],
+        [3, 'unknownSegments', 'raw', null],
+        [1, 'balance', 'boolean'],
+        [173, 'unknownSegments', 'raw', null],
+      ],
+    },
   ],
 };
 

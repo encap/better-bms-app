@@ -116,11 +116,11 @@ const App = () => {
   }, [status, device]);
 
   return (
-    <AppContainer onClick={handleClickAnywhere}>
-      <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
+    <AppContainer>
+      <TopBar deviceInfoData={deviceInfoData} liveData={liveData} onClick={handleClickAnywhere} />
       {status === 'connected' && <QuickToggles settingsData={settingsData} />}
 
-      <ContentContainer>
+      <ContentContainer onClick={handleClickAnywhere}>
         <Freeze freeze={selectedScreen !== 'Logs'}>
           <LogViewer />
         </Freeze>

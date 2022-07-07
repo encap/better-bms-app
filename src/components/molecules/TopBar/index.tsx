@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { MouseEventHandler, useCallback, useEffect, useRef } from 'react';
 import { DeviceInfoData, LiveData } from 'interfaces/data';
 import { useDevice } from 'components/providers/DeviceProvider';
 import { QuickTogglesContainer } from 'components/molecules/QuickToggles/styles';
@@ -13,9 +13,10 @@ import {
 type TopBarProps = {
   deviceInfoData: DeviceInfoData | null;
   liveData: LiveData | null;
+  onClick?: MouseEventHandler;
 };
 
-const TopBar = ({ deviceInfoData, liveData }: TopBarProps) => {
+const TopBar = ({ deviceInfoData, liveData, onClick }: TopBarProps) => {
   const heartbeatToggle = useRef(false);
 
   const { device, status } = useDevice();
@@ -24,11 +25,16 @@ const TopBar = ({ deviceInfoData, liveData }: TopBarProps) => {
     heartbeatToggle.current = !heartbeatToggle.current;
   }, [liveData]);
 
-  const handleStatusClick = useCallback(() => {
-    if (status !== 'disconnected') {
-      device?.disconnect('user');
-    }
-  }, [device, status]);
+  const handleStatusClick = useCallback<MouseEventHandler>(
+    (event) => {
+      if (status !== 'disconnected') {
+        device?.disconnect('user');
+      } else {
+        onClick?.(event);
+      }
+    },
+    [device, status, onClick]
+  );
 
   return (
     <>

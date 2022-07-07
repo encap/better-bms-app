@@ -20,6 +20,7 @@ export type PackedNumericValueProperties =
 export type TextValueTypes = 'ASCII' | 'UTF-8' | 'hex';
 export type RawValueType = 'raw';
 export type ByteLength = number;
+export type BooleanType = 'boolean';
 
 export type GetterFunction = (itemData: {
   itemBuffer: ArrayBuffer;
@@ -28,7 +29,7 @@ export type GetterFunction = (itemData: {
   responseBuffer: ArrayBuffer;
 }) => any;
 
-export type DataItemTypes = 'numeric' | 'text' | 'raw';
+export type DataItemTypes = 'numeric' | 'text' | 'raw' | 'boolean';
 
 export const PackedItemDescriptionIndexes = {
   byteLength: 0,
@@ -40,6 +41,7 @@ export const PackedItemDescriptionIndexes = {
 export type PackedItemDescription<T extends ResponseDataTypes> =
   | [ByteLength, ResponseDataTypeKeys<T>, PackedNumericValueProperties]
   | [ByteLength, ResponseDataTypeKeys<T>, TextValueTypes]
+  | [ByteLength, ResponseDataTypeKeys<T>, BooleanType]
   | [ByteLength, ResponseDataTypeKeys<T>, RawValueType, GetterFunction | undefined | null];
 
 export type ItemDescription<T extends ResponseDataTypes> = {
@@ -61,6 +63,9 @@ export type ItemProperties =
   | {
       type: StrictExtract<DataItemTypes, 'text'>;
       textEncoding: TextValueTypes;
+    }
+  | {
+      type: StrictExtract<DataItemTypes, 'boolean'>;
     }
   | {
       type: StrictExtract<DataItemTypes, 'raw'>;

@@ -228,6 +228,34 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
 
             break;
           }
+          case 'boolean': {
+            const isSomeByteNotZero = buffer.some((byte) => byte > 0);
+
+            DecodeLog.debug(
+              `Decoded boolean ${String(isSomeByteNotZero)} ${bufferToHexString(
+                buffer,
+                '',
+                '',
+                '0x'
+              )}`,
+              {
+                isSomeByteNotZero,
+                buffer,
+                dataItem,
+              }
+            );
+
+            value = isSomeByteNotZero;
+            break;
+          }
+          default: {
+            //  @ts-expect-error
+            DecodeLog.warn(`Unhandled data type ${dataItem.type}`, {
+              dataItem,
+              buffer,
+              responseDefinition,
+            });
+          }
         }
 
         currentDataItem = null;
