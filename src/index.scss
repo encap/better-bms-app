@@ -24,6 +24,7 @@ html { font-family: "Inter", "system-ui"; }
 html, body {
   padding: 0;
   margin: 0;
+  height: 100%;
 }
 
 body {
@@ -32,15 +33,11 @@ body {
 }
 
 #root {
-  min-height: 100vh;
-  max-height: 100vh;
+  height: 100%;
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
   outline: 1px solid #111;
-  display: flex;
-  flex-direction: column;
-  position: relative;
 }
 
 code {

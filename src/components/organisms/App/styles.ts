@@ -8,8 +8,7 @@ export const AppContainer = styled.div`
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
   width: 100%;
-  max-height: 100%;
-  flex-grow: 1;
+  height: 100%;
 `;
 
 export const ContentContainer = styled.main`
