@@ -130,7 +130,8 @@ export class JKBMS implements Device {
       }
     } catch (error) {
       console.error(error);
-      DeviceLog.error('Request device failed', {
+      // @ts-ignore
+      DeviceLog.error(`Request device failed. ${error?.message}`, {
         options,
         device,
       });
