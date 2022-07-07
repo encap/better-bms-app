@@ -1,7 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DeepRequired } from 'ts-essentials';
 import { ResponseDecoder } from '../../decoders/responseDecoder';
-import { Data } from '../../interfaces/data';
+import {
+  Data,
+  DeviceInfoData,
+  InternalData,
+  INTERNAL_KEYS,
+  LiveData,
+  ResponseDataTypeKeys,
+  ResponseDataTypeRecord,
+  ResponseDataTypes,
+} from '../../interfaces/data';
 import { DecodedResponseData } from '../../interfaces/decoder';
 import {
   ConnectOptions,
@@ -11,7 +20,11 @@ import {
   DeviceStatus,
   DisconnectReasons,
 } from '../../interfaces/device';
-import { CommandDefinition, ProtocolSpecification } from '../../interfaces/protocol';
+import {
+  CommandDefinition,
+  ProtocolSpecification,
+  ResponseDefinition,
+} from '../../interfaces/protocol';
 import { wait } from '../../utils';
 import { bufferToHexString, intToHexString } from '../../utils/binary';
 import { chalk, DeviceLog } from '../../utils/logger';
@@ -22,12 +35,12 @@ export class JKBMS implements Device {
   status!: DeviceStatus;
   deviceIdenticator!: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
-  lastPublicData!: Data | null;
   decoder!: ResponseDecoder<JKBMS_COMMANDS>;
   responseBuffer!: Uint8Array;
   characteristic!: BluetoothRemoteGATTCharacteristic | null;
   bluetoothDevice!: BluetoothDevice | null;
   inactivityTimeout: ReturnType<typeof setTimeout> | null | undefined;
+  cache!: Partial<ResponseDataTypeRecord>;
 
   constructor(callbacks: DeviceCallbacks) {
     DeviceLog.info(`JK BMS initializing`, { callbacks });
@@ -40,6 +53,11 @@ export class JKBMS implements Device {
       `Using protocol ${this.protocol.name}
     commands: [
         ${Object.values(this.protocol.commands)
+          .map(({ name }) => name)
+          .join(', ')}
+    ]
+    responses: [
+        ${Object.values(this.protocol.responses)
           .map(({ name }) => name)
           .join(', ')}
     ]
@@ -60,7 +78,7 @@ export class JKBMS implements Device {
     DeviceLog.log(`Resetting device`, this);
     this.setStatus('disconnected');
     this.deviceIdenticator = null;
-    this.lastPublicData = null;
+    this.cache = {};
 
     this.characteristic = null;
     this.bluetoothDevice = null;
@@ -381,7 +399,7 @@ export class JKBMS implements Device {
 
       await this.characteristic.startNotifications();
       await wait(200);
-      await this.sendCommand(JKBMS_COMMANDS.GET_CELL_DATA);
+      await this.sendCommand(JKBMS_COMMANDS.GET_SETTINGS);
       DeviceLog.info(`Listening for cell data notifications`);
       DeviceLog.info(`Queuing Get device info`);
       await wait(500);
@@ -403,7 +421,7 @@ export class JKBMS implements Device {
       throw new Error(`Device must be connected to send a command`);
     }
 
-    const command = this.protocol.getCommand(commandName) as DeepRequired<
+    const command = this.protocol.getCommandByName(commandName) as DeepRequired<
       CommandDefinition<JKBMS_COMMANDS>
     >;
 
@@ -446,7 +464,7 @@ export class JKBMS implements Device {
     const template = new Uint8Array(20);
     const commandBuffer = new Uint8Array([
       ...this.protocol.commandHeader,
-      ...command.payload,
+      ...command.code,
       ...template,
     ]).slice(0, template.length);
     DeviceLog.debug(`Command pre checksum: ${bufferToHexString(commandBuffer)}`, { commandBuffer });
@@ -507,8 +525,8 @@ export class JKBMS implements Device {
 
       const segmentType = this.getSegmentType(this.responseBuffer);
 
-      const expectedSegments = this.protocol.commands.map(
-        (command) => command.responseSignature[0]
+      const expectedSegments = this.protocol.responses.map(
+        (responseDefinition) => responseDefinition.signature[0]
       );
 
       if (!expectedSegments.includes(segmentType)) {
@@ -517,13 +535,13 @@ export class JKBMS implements Device {
         return;
       }
 
-      const command = this.protocol.commands.find(
-        (command) => command.responseSignature[0] === segmentType
+      const responseDefinition = this.protocol.getResponseBySignature(
+        new Uint8Array([segmentType])
       )!;
 
-      if (this.isSegmentComplete(this.responseBuffer, command)) {
+      if (this.isSegmentComplete(this.responseBuffer, responseDefinition)) {
         if (!this.isChecksumCorrect(this.responseBuffer)) {
-          DeviceLog.warn(`Segment corrupted. Flushing ${command.name}`, {
+          DeviceLog.warn(`Segment corrupted. Flushing ${responseDefinition.name}`, {
             responseBuffer: this.responseBuffer,
           });
           this.flushResponseBuffer();
@@ -531,18 +549,22 @@ export class JKBMS implements Device {
         }
 
         try {
-          DeviceLog.debug(`Segment complete and valid. Decoding ${command.name}`, {
+          DeviceLog.debug(`Segment complete and valid. Decoding ${responseDefinition.name}`, {
             responseBuffer: this.responseBuffer,
           });
 
-          const decodedData = this.decoder!.decode(command, this.responseBuffer);
+          const decodedData = this.decoder!.decode(
+            responseDefinition.dataType,
+            new Uint8Array([segmentType]),
+            this.responseBuffer
+          );
 
-          this.handleDecodedData(decodedData);
+          this.handleDecodedData(responseDefinition.dataType, decodedData);
 
           this.flushResponseBuffer();
         } catch (error) {
           console.error(error);
-          DeviceLog.error(`${command.name} data decode or handle failed`, {
+          DeviceLog.error(`${responseDefinition.name} data decode or handle failed`, {
             error,
           });
           return;
@@ -570,8 +592,8 @@ export class JKBMS implements Device {
     );
   }
 
-  private isSegmentComplete(segment: Uint8Array, command: CommandDefinition): boolean {
-    DeviceLog.debug(`Checking if segment is complete`, { segment, command });
+  private isSegmentComplete(segment: Uint8Array, responseDefinition: ResponseDefinition): boolean {
+    DeviceLog.debug(`Checking if segment is complete`, { segment, responseDefinition });
 
     if (!this.doesStartWithSegmentHeader(segment)) {
       // This shouldn't happen
@@ -581,26 +603,26 @@ export class JKBMS implements Device {
       return false;
     }
 
-    if (segment.length === command.responseLength) {
-      DeviceLog.debug(`Segment has expected length ${command.responseLength} bytes`, {
+    if (segment.length === responseDefinition.length) {
+      DeviceLog.debug(`Segment has expected length ${responseDefinition.length} bytes`, {
         segment,
-        command,
+        responseDefinition,
       });
       return true;
-    } else if (segment.length > command.responseLength) {
+    } else if (segment.length > responseDefinition.length) {
       DeviceLog.warn(
         `Segment is longer than expected length by ${
-          segment.length - command.responseLength
+          segment.length - responseDefinition.length
         }. Proceed with caution`,
-        { segment, command }
+        { segment, responseDefinition }
       );
 
       return true;
     }
 
     DeviceLog.debug(
-      `Segment needs ${command.responseLength - segment.length} more bytes to be complete`,
-      { segment, command }
+      `Segment needs ${responseDefinition.length - segment.length} more bytes to be complete`,
+      { segment, responseDefinition }
     );
     return false;
   }
@@ -657,11 +679,13 @@ export class JKBMS implements Device {
     this.responseBuffer = new Uint8Array([]);
   }
 
-  private handleDecodedData(decodedData: DecodedResponseData): void {
+  private handleDecodedData<T extends ResponseDataTypes>(
+    dataType: T,
+    decodedData: DecodedResponseData<T>
+  ): void {
     const timestamp = new Date().valueOf();
-    const timeSinceLastOne = this.lastPublicData?.timestamp
-      ? timestamp - this.lastPublicData.timestamp
-      : null;
+    const lastData = this.cache[dataType];
+    const timeSinceLastOne = lastData?.timestamp ? timestamp - lastData.timestamp : null;
 
     DeviceLog.debug(`Preparing public data`, {
       decodedData,
@@ -669,23 +693,33 @@ export class JKBMS implements Device {
       timestamp: new Date(timestamp),
     });
 
-    const publicData: Data = {
+    const internalData: Partial<InternalData> = {};
+
+    const publicData = {
       timestamp,
       timeSinceLastOne,
-      checksumCorrect: true,
-      deviceInfo: decodedData.deviceInfo,
-      batteryData: decodedData.batteryData,
-    };
+      ...decodedData,
+    } as ResponseDataTypeRecord[T];
 
-    this.lastPublicData = publicData;
+    Object.keys(publicData).forEach((key) => {
+      // @ts-ignore
+      if (INTERNAL_KEYS.includes(key)) {
+        // @ts-ignore
+        internalData[key] = publicData[key];
+        // @ts-ignore
+        delete publicData[key];
+      }
+    });
 
     DeviceLog.log(
       `New data arrived V: ${
-        publicData.batteryData?.voltage || publicData.deviceInfo?.hardwareVersion
+        (publicData as LiveData)?.voltage || (publicData as DeviceInfoData)?.hardwareVersion
       } Ping: ${publicData.timeSinceLastOne}ms`,
-      { publicData, decodedData, internalData: decodedData.internalData }
+      { publicData, decodedData, internalData }
     );
 
-    this.callbacks.onDataChange(publicData);
+    this.cache[dataType] = publicData;
+
+    this.callbacks.onDataReceived(dataType, publicData);
   }
 }

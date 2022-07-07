@@ -1,7 +1,7 @@
-import { DeepPartial } from 'ts-essentials';
+import { ResponseDataTypes } from '../interfaces/data';
 import { DecodedResponseData, Decoder } from '../interfaces/decoder';
 import {
-  CommandDefinition,
+  ItemDescription,
   PackedProtocolSpecification,
   ProtocolSpecification,
 } from '../interfaces/protocol';
@@ -44,25 +44,25 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
     try {
       isValid = true;
 
-      const areCommandsResponseLengthsCorrect = protocol.commands.every((command) => {
-        const calculatedLength = command.response.reduce(
+      const areResponsesLengthsCorrect = protocol.responses.every((response) => {
+        const calculatedLength = (response.items as ItemDescription<ResponseDataTypes>[]).reduce(
           (byteSum, itemDescription) => (byteSum += itemDescription.byteLength),
           0
         );
 
-        if (calculatedLength === command.responseLength) {
+        if (calculatedLength === response.length) {
           return true;
         } else {
           DecodeLog.warn(
-            `Command ${command.name} calculated response length ${calculatedLength} does not match ${command.responseLength} bytes`,
-            { command }
+            `Response ${response.name} calculated length ${calculatedLength} does not match ${response.length} bytes`,
+            { response }
           );
           return false;
         }
       });
 
-      if (!areCommandsResponseLengthsCorrect) {
-        DeviceLog.error(`Commands response lengths of ${protocol.name} don't match`, { protocol });
+      if (!areResponsesLengthsCorrect) {
+        DeviceLog.error(`Response lengths of ${protocol.name} don't match`, { protocol });
         isValid = false;
       }
     } catch (error) {
@@ -79,28 +79,47 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
     return isValid;
   }
 
-  decode(command: CommandDefinition, responseBuffer: Uint8Array): DecodedResponseData {
+  decode<T extends ResponseDataTypes = ResponseDataTypes>(
+    responseType: T,
+    responseSignature: Uint8Array,
+    responseBuffer: Uint8Array
+  ): DecodedResponseData<T> {
+    const responseDefinition = this.protocol.getResponseBySignature<T>(responseSignature);
+
+    if (!responseDefinition) {
+      const msg = `Response definition matching signature ${bufferToHexString(
+        responseSignature,
+        '',
+        '',
+        '0x'
+      )} not found`;
+      DecodeLog.error(msg, { responseSignature });
+
+      throw new Error(msg);
+    }
+
     let currentDataItem = null;
 
     try {
-      DecodeLog.log(`Decoding ${command.name} data (${responseBuffer.byteLength} bytes)`, {
-        command,
-        responseBuffer,
-      });
+      DecodeLog.log(
+        `Decoding ${responseType} ${bufferToHexString(responseSignature, '', '', '0x')} (${
+          responseBuffer.byteLength
+        } bytes)`,
+        {
+          responseType,
+          responseBuffer,
+        }
+      );
 
       DecodeLog.debug(bufferToHexString(responseBuffer));
-      const decodedDataAcc: Required<DeepPartial<DecodedResponseData>> = {
-        batteryData: {},
-        deviceInfo: {},
-        internalData: {},
-      };
+      const decodedDataAcc: DecodedResponseData<T> = {};
 
-      for (const dataItem of command.response) {
+      for (const dataItem of responseDefinition.items) {
         currentDataItem = dataItem;
         const buffer = responseBuffer.slice(dataItem.offset, dataItem.offset + dataItem.byteLength);
 
         DecodeLog.debug(
-          `Decoding ${dataItem.type} item ${dataItem.group}.${dataItem.name} at offset ${dataItem.offset}`,
+          `Decoding ${dataItem.type} item ${String(dataItem.key)} at offset ${dataItem.offset}`,
           { dataItem, accumulator: decodedDataAcc, responseBuffer, buffer }
         );
 
@@ -213,17 +232,17 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
 
         currentDataItem = null;
 
-        const doesValueAlreadyExist = Object.hasOwn(decodedDataAcc[dataItem.group], dataItem.name);
+        const doesValueAlreadyExist = Object.hasOwn(decodedDataAcc, dataItem.key);
 
         if (doesValueAlreadyExist) {
           // @ts-ignore
-          const existingValue = decodedDataAcc[dataItem.group][dataItem.name];
+          const existingValue = decodedDataAcc[dataItem.key];
 
           if (
             (typeof existingValue === 'object' && typeof existingValue.length === 'undefined') ||
             typeof existingValue !== 'object'
           ) {
-            DecodeLog.info(`${dataItem.group}.${dataItem.name} already exists. Creating an array`, {
+            DecodeLog.info(`$${String(dataItem.key)} already exists. Creating an array`, {
               existingValue,
               dataItem,
               accumulator: decodedDataAcc,
@@ -233,30 +252,32 @@ export class ResponseDecoder<T extends string> implements Decoder<T> {
           } else {
             value = [...existingValue, value];
             DecodeLog.debug(
-              `Appending another value to ${dataItem.group}.${dataItem.name}. Total length ${value.length}`,
+              `Appending another value to ${String(dataItem.key)}. Total length ${value.length}`,
               { existingValue, dataItem, accumulator: decodedDataAcc }
             );
           }
         }
 
         // @ts-ignore
-        decodedDataAcc[dataItem.group][dataItem.name] = value;
+        decodedDataAcc[dataItem.key] = value;
       }
 
       DecodeLog.log(
-        `Decoding ${command.name} successful. V: ${decodedDataAcc.batteryData.voltage} SW: ${decodedDataAcc.deviceInfo?.firmwareVersion}`,
-        { decodedDataAcc, command, responseBuffer },
+        `Successfully decoded ${responseDefinition.name} (${
+          Object.entries(decodedDataAcc).length
+        } items)`,
+        { decodedDataAcc, responseDefinition, responseBuffer },
         decodedDataAcc
       );
 
-      return decodedDataAcc as DecodedResponseData;
+      return decodedDataAcc;
     } catch (error) {
       console.log(error);
       DecodeLog.error(
-        `Decoding ${command.name} failed in ${
-          currentDataItem ? `${currentDataItem.group}.${currentDataItem.name}` : 'null'
+        `Decoding ${responseDefinition.name} failed in ${
+          currentDataItem ? `${String(currentDataItem.key)}` : 'null'
         } at ${currentDataItem?.offset}`,
-        { error, command, responseBuffer }
+        { error, responseDefinition, responseBuffer }
       );
       throw error;
     }

@@ -1,5 +1,5 @@
-import { DeepReadonly } from 'ts-essentials';
-import { Data } from './data';
+import { DeepPartial, DeepReadonly } from 'ts-essentials';
+import { ResponseDataTypes, ResponseDataTypeRecord } from './data';
 import { Decoder } from './decoder';
 
 export type DeviceIdentificator = DeepReadonly<{
@@ -18,7 +18,7 @@ export type DeviceCallbacks = {
   onConnected?(deviceIdentificator: DeviceIdentificator): void;
   onDisconnected?(reason: DisconnectReasons): void;
   onError?(error: Error): void;
-  onDataChange(data: Data): void;
+  onDataReceived<T extends ResponseDataTypes>(dataType: T, data: ResponseDataTypeRecord[T]): void;
 };
 
 export type ConnectOptions = {
@@ -29,7 +29,7 @@ export interface Device {
   status: DeviceStatus;
   deviceIdenticator: DeviceIdentificator | null;
   callbacks: DeviceCallbacks;
-  lastPublicData: Data | null;
+  cache: DeepPartial<ResponseDataTypeRecord>;
   decoder: Decoder<string> | null;
 
   connect(options?: ConnectOptions): Promise<DeviceIdentificator | null>;

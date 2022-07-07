@@ -2,11 +2,10 @@ import { Grid, Loading, useToasts } from '@geist-ui/core';
 import { useCallback, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
 import { useLocalStorage } from 'react-use';
-import { DeepRequired } from 'ts-essentials';
 import { PREVIOUS_DEVICE_LOCAL_STORAGE_KEY } from '../../../config';
 import { JKBMS } from '../../../devices/jkbms';
 import { useWakelock } from '../../../hooks/useWakelock';
-import { Data } from '../../../interfaces/data';
+import { DeviceInfoData, LiveData, SettingsData } from '../../../interfaces/data';
 import { DeviceIdentificator } from '../../../interfaces/device';
 import { UILog } from '../../../utils/logger';
 import BottomNavigation from '../../molecules/BottomNavigation';
@@ -30,7 +29,9 @@ const App = () => {
 
   const { setToast } = useToasts();
 
-  const [data, setData] = useState<Data | null>(null);
+  const [liveData, setLiveData] = useState<LiveData | null>(null);
+  const [deviceInfoData, setDeviceInfoData] = useState<DeviceInfoData | null>(null);
+  const [settingsData, setSettingsData] = useState<SettingsData | null>(null);
 
   const [selectedScreen, setSelectedScreen] = useState<Screens>('Logs');
 
@@ -38,23 +39,20 @@ const App = () => {
     UILog.info('App rendered');
 
     const newDevice = new JKBMS({
-      onDataChange(newData) {
-        // @ts-ingore
-        setData(
-          (current) =>
-            ({
-              ...current,
-              ...newData,
-              batteryData: {
-                ...current?.batteryData,
-                ...newData.batteryData,
-              },
-              deviceInfo: {
-                ...current?.deviceInfo,
-                ...newData.deviceInfo,
-              },
-            } as Data)
-        );
+      onDataReceived(dataType, newData) {
+        switch (dataType) {
+          case 'LIVE_DATA': {
+            setLiveData(newData as LiveData);
+            break;
+          }
+          case 'DEVICE_INFO': {
+            setDeviceInfoData(newData as DeviceInfoData);
+            break;
+          }
+          case 'SETTINGS': {
+            setSettingsData(newData as SettingsData);
+          }
+        }
       },
       onStatusChange(newStatus) {
         setStatus(newStatus);
@@ -119,8 +117,8 @@ const App = () => {
 
   return (
     <AppContainer onClick={handleClickAnywhere}>
-      <TopBar data={data} />
-      {status === 'connected' && <QuickToggles />}
+      <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
+      {status === 'connected' && <QuickToggles settingsData={settingsData} />}
 
       <ContentContainer>
         <Freeze freeze={selectedScreen !== 'Logs'}>
@@ -128,10 +126,10 @@ const App = () => {
         </Freeze>
 
         {(() => {
-          if (data?.batteryData?.voltage) {
+          if (liveData?.voltage) {
             switch (selectedScreen) {
               case 'Summary': {
-                return <Summary data={data as DeepRequired<Data>} />;
+                return <Summary liveData={liveData} />;
               }
             }
           } else {

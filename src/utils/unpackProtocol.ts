@@ -1,19 +1,21 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DistributiveOmit } from '../interfaces';
+import { ResponseDataTypeKeys, ResponseDataTypes } from '../interfaces/data';
 import {
   ByteLength,
   CommandDefinition,
   DataItemTypes,
+  GenericResponseDefinition,
   GetterFunction,
   ItemDescription,
   ItemProperties,
-  PackedCommandDefinition,
-  PackedGroupAndName,
+  PackedGenericResponseDefinition,
   PackedItemDescription,
   PackedItemDescriptionIndexes,
   PackedNumericValueProperties,
   PackedProtocolSpecification,
   ProtocolSpecification,
+  ResponseDefinition,
   TextValueTypes,
 } from '../interfaces/protocol';
 import { DecodeLog } from './logger';
@@ -23,13 +25,31 @@ export function unpackProtocol<T extends string>(
 ): ProtocolSpecification<T> {
   DecodeLog.info(`Unpacking protocol`, { packedProtocol });
 
-  const unpackedCommands = packedProtocol.commands.map(unpackCommand);
+  // @ts-ignore
+  const unpackedResponses = packedProtocol.responses.map(unpackResponse);
 
-  const unpackedProtocol = {
+  const unpackedProtocol: ProtocolSpecification<T> = {
     ...packedProtocol,
-    commands: unpackedCommands,
-    getCommand(commandName: T): CommandDefinition<T> {
+    // @ts-ignore
+    responses: unpackedResponses,
+    getCommandByName(commandName: T): CommandDefinition<T> {
       return this.commands.find((command) => command.name === commandName)!;
+    },
+    getResponseByName<T extends ResponseDataTypes>(
+      responseName: ResponseDefinition['name']
+    ): GenericResponseDefinition<T> | null {
+      return this.responses.find(
+        (response) => response.name === responseName
+      ) as GenericResponseDefinition<T> | null;
+    },
+    getResponseBySignature<T extends ResponseDataTypes>(
+      responseSignature: Exclude<ResponseDefinition['signature'], undefined>
+    ): GenericResponseDefinition<T> | null {
+      return this.responses.find(
+        (response) =>
+          responseSignature.byteLength === response.signature?.byteLength &&
+          response.signature!.every((value, i) => value === responseSignature[i])
+      ) as GenericResponseDefinition<T> | null;
     },
   };
 
@@ -39,19 +59,19 @@ export function unpackProtocol<T extends string>(
   return unpackedProtocol;
 }
 
-export function unpackCommand<T extends string = string>(
-  packedCommand: PackedCommandDefinition<T>
-): CommandDefinition<T> {
+export function unpackResponse<T extends ResponseDataTypes>(
+  packedResponse: PackedGenericResponseDefinition<T>
+): GenericResponseDefinition<T> {
   return {
-    ...packedCommand,
-    response: unpackCommandResponseDefinition(packedCommand.response),
+    ...packedResponse,
+    items: unpackResponseItems(packedResponse.items),
   };
 }
 
-export function unpackDataItemDescription(
-  packedItem: PackedItemDescription,
+export function unpackDataItemDescription<T extends ResponseDataTypes>(
+  packedItem: PackedItemDescription<T>,
   offset: ByteLength = 0
-): ItemDescription {
+): ItemDescription<T> {
   const indexes = PackedItemDescriptionIndexes;
   const type: DataItemTypes =
     packedItem[indexes.valueType] === 'raw'
@@ -91,34 +111,34 @@ export function unpackDataItemDescription(
     }
   }
 
-  const [group, name] = packedItem[indexes.groupAndName] as PackedGroupAndName;
+  const key = packedItem[indexes.key] as ResponseDataTypeKeys<T>;
 
   // @ts-ignore
   return {
     byteLength: packedItem[indexes.byteLength] as number,
     offset,
     type,
-    group,
-    name,
+    key,
     ...properties,
   };
 }
 
-export function unpackCommandResponseDefinition(
-  packedResponseDefinition: PackedItemDescription[]
-): ItemDescription[] {
+export function unpackResponseItems<T extends ResponseDataTypes>(
+  packedResponseDefinition: PackedItemDescription<T>[]
+): ItemDescription<T>[] {
   return packedResponseDefinition.reduce(
-    (acc: ItemDescription[], packedItem: PackedItemDescription) => {
+    (acc: ItemDescription<T>[], packedItem: PackedItemDescription<T>) => {
       const previousItem = acc[acc.length - 1];
 
       return [
         ...acc,
         unpackDataItemDescription(
+          // @ts-ignore
           packedItem,
           previousItem ? previousItem.offset + previousItem.byteLength : 0
         ),
       ];
     },
-    [] as ItemDescription[]
+    [] as ItemDescription<T>[]
   );
 }

@@ -1,13 +1,11 @@
-import { DeepRequired } from 'ts-essentials';
-import { Data } from '../interfaces/data';
+import { LiveData } from '../interfaces/data';
+
 export type DataItemUIOptions = {
   label?: string;
   unit?: 'V' | 'W' | 'A' | 'Ah' | 'Wh' | 'R' | '%' | '°C';
   decimals?: number;
 };
-export const batteryDataUIConfig: Partial<
-  Record<keyof DeepRequired<Exclude<Data['batteryData'], undefined>>, DataItemUIOptions>
-> = {
+export const liveDataUIConfig: Partial<Record<keyof LiveData, DataItemUIOptions>> = {
   voltage: {
     label: 'Voltage',
     unit: 'V',

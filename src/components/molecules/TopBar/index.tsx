@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Data } from '../../../interfaces/data';
+import { DeviceInfoData, LiveData } from '../../../interfaces/data';
 import { useDevice } from '../../organisms/providers/DeviceProvider';
 import { QuickTogglesContainer } from '../QuickToggles/styles';
 import {
@@ -11,17 +11,18 @@ import {
 } from './styles';
 
 type TopBarProps = {
-  data: Data | null;
+  deviceInfoData: DeviceInfoData | null;
+  liveData: LiveData | null;
 };
 
-const TopBar = ({ data }: TopBarProps) => {
+const TopBar = ({ deviceInfoData, liveData }: TopBarProps) => {
   const heartbeatToggle = useRef(false);
 
   const { device, status } = useDevice();
 
   useEffect(() => {
     heartbeatToggle.current = !heartbeatToggle.current;
-  }, [data]);
+  }, [liveData]);
 
   const handleStatusClick = useCallback(() => {
     if (status !== 'disconnected') {
@@ -32,15 +33,15 @@ const TopBar = ({ data }: TopBarProps) => {
   return (
     <>
       <TopBarContainer>
-        {status === 'connected' && data?.deviceInfo?.firmwareVersion && (
-          <SmallText>{data.deviceInfo.firmwareVersion}</SmallText>
+        {status === 'connected' && deviceInfoData?.firmwareVersion && (
+          <SmallText>{deviceInfoData.firmwareVersion}</SmallText>
         )}
         <DeviceStatusTitle onClick={handleStatusClick}>
           {status === 'disconnected' ? `Click anywhere to connect` : status}
         </DeviceStatusTitle>
-        {status === 'connected' && data?.timeSinceLastOne && (
+        {status === 'connected' && liveData?.timeSinceLastOne && (
           <PingContainer>
-            <SmallText>{`${String(data?.timeSinceLastOne)}ms`}</SmallText>
+            <SmallText>{`${String(liveData?.timeSinceLastOne)}ms`}</SmallText>
             <PingDot heartbeat={heartbeatToggle.current} />
           </PingContainer>
         )}

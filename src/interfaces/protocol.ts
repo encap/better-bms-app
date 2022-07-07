@@ -1,5 +1,5 @@
 import { StrictExtract, StrictOmit } from 'ts-essentials';
-import { Data, InternalData } from './data';
+import { ResponseDataTypeKeys, ResponseDataTypes } from './data';
 
 export type NumberTypes =
   | 'Int8'
@@ -21,12 +21,6 @@ export type TextValueTypes = 'ASCII' | 'UTF-8' | 'hex';
 export type RawValueType = 'raw';
 export type ByteLength = number;
 
-export type DataGroup = StrictExtract<keyof Data, 'batteryData' | 'deviceInfo'> | 'internalData';
-export type PackedGroupAndName =
-  | [StrictExtract<DataGroup, 'deviceInfo'>, keyof Exclude<Data['deviceInfo'], undefined>]
-  | [StrictExtract<DataGroup, 'batteryData'>, keyof Exclude<Data['batteryData'], undefined>]
-  | [StrictExtract<DataGroup, 'internalData'>, keyof Exclude<InternalData, undefined>];
-
 export type GetterFunction = (itemData: {
   itemBuffer: ArrayBuffer;
   byteLength: ByteLength;
@@ -38,29 +32,21 @@ export type DataItemTypes = 'numeric' | 'text' | 'raw';
 
 export const PackedItemDescriptionIndexes = {
   byteLength: 0,
-  groupAndName: 1,
+  key: 1,
   valueType: 2,
   getterFunction: 3,
 };
 
-export type PackedItemDescription =
-  | [ByteLength, PackedGroupAndName, PackedNumericValueProperties]
-  | [ByteLength, PackedGroupAndName, TextValueTypes]
-  | [ByteLength, PackedGroupAndName, RawValueType, GetterFunction | undefined | null];
+export type PackedItemDescription<T extends ResponseDataTypes> =
+  | [ByteLength, ResponseDataTypeKeys<T>, PackedNumericValueProperties]
+  | [ByteLength, ResponseDataTypeKeys<T>, TextValueTypes]
+  | [ByteLength, ResponseDataTypeKeys<T>, RawValueType, GetterFunction | undefined | null];
 
-export type GroupAndName =
-  | {
-      group: StrictExtract<DataGroup, 'deviceInfo'>;
-      name: keyof Exclude<Data['deviceInfo'], undefined>;
-    }
-  | {
-      group: StrictExtract<DataGroup, 'batteryData'>;
-      name: keyof Exclude<Data['batteryData'], undefined>;
-    }
-  | {
-      group: StrictExtract<DataGroup, 'internalData'>;
-      name: keyof Exclude<InternalData, undefined>;
-    };
+export type ItemDescription<T extends ResponseDataTypes> = {
+  byteLength: ByteLength;
+  offset: ByteLength;
+  key: ResponseDataTypeKeys<T>;
+} & ItemProperties;
 
 export type ItemProperties =
   | {
@@ -81,27 +67,38 @@ export type ItemProperties =
       getterFunction: GetterFunction | undefined | null;
     };
 
-export type ItemDescription = {
-  byteLength: ByteLength;
-  offset: ByteLength;
-} & GroupAndName &
-  ItemProperties;
+type ValueOf<T> = T[keyof T];
+
+export type GenericResponseDefinition<T extends ResponseDataTypes> = {
+  name: T | string;
+  dataType: T;
+  length: ByteLength;
+  command?: string;
+  signature?: Uint8Array;
+  items: ItemDescription<T>[];
+};
+
+export type PackedGenericResponseDefinition<T extends ResponseDataTypes> = StrictOmit<
+  GenericResponseDefinition<T>,
+  'items'
+> & {
+  items: PackedItemDescription<T>[];
+};
+
+export type ResponseDefinition = ValueOf<{
+  [T in ResponseDataTypes]: GenericResponseDefinition<T>;
+}>;
+
+export type PackedResponseDefinition = ValueOf<{
+  [T in ResponseDataTypes]: PackedGenericResponseDefinition<T>;
+}>;
 
 export type CommandDefinition<T extends string = string> = {
   name: T;
-  payload?: Uint8Array;
-  responseSignature?: Uint8Array;
+  code: Uint8Array;
   timeout?: number;
   wait?: number;
-  responseLength: number;
-  response: ItemDescription[];
-};
-
-export type PackedCommandDefinition<T extends string = string> = Omit<
-  CommandDefinition<T>,
-  'response'
-> & {
-  response: PackedItemDescription[];
+  responseName?: ResponseDefinition['name'];
 };
 
 export interface ProtocolSpecification<T extends string> {
@@ -114,12 +111,19 @@ export interface ProtocolSpecification<T extends string> {
   connectPreviousTimeout?: number;
   inactivityTimeout?: number;
   commands: CommandDefinition<T>[];
-  getCommand(commandName: T): CommandDefinition<T>;
+  responses: ResponseDefinition[];
+  getCommandByName(commandName: T): CommandDefinition<T>;
+  getResponseBySignature<T extends ResponseDataTypes>(
+    responseSignature: ResponseDefinition['signature']
+  ): GenericResponseDefinition<T> | null;
+  getResponseByName<T extends ResponseDataTypes>(
+    responseName: ResponseDefinition['name']
+  ): GenericResponseDefinition<T> | null;
 }
 
 export type PackedProtocolSpecification<T extends string> = StrictOmit<
   ProtocolSpecification<T>,
-  'getCommand' | 'commands'
+  'getCommandByName' | 'getResponseByName' | 'getResponseBySignature' | 'responses'
 > & {
-  commands: PackedCommandDefinition<T>[];
+  responses: PackedResponseDefinition[];
 };

@@ -13,7 +13,7 @@ import {
   TimeScale,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { Data } from '../../../interfaces/data';
+import { LiveData } from '../../../interfaces/data';
 import 'chartjs-adapter-date-fns';
 import ChartStreaming from 'chartjs-plugin-streaming';
 import { ChartJSOrUndefined } from 'react-chartjs-2/dist/types';
@@ -77,7 +77,7 @@ export const options: ChartOptions<'line'> = {
 };
 
 type LineChartProps = {
-  currentData: Data;
+  liveData: LiveData;
 };
 
 type Datum = {
@@ -86,7 +86,7 @@ type Datum = {
   current: number;
 } | null;
 
-export function LineChart({ currentData }: LineChartProps) {
+export function LineChart({ liveData }: LineChartProps) {
   const chartRef = useRef<ChartJSOrUndefined<'line', Datum[]>>();
   const pauseTimestamp = useRef<number | null>(null);
   const theme = useTheme();
@@ -183,17 +183,17 @@ export function LineChart({ currentData }: LineChartProps) {
   );
 
   useEffect(() => {
-    if (chartRef.current && currentData.batteryData && !pauseTimestamp.current) {
+    if (chartRef.current && liveData && !pauseTimestamp.current) {
       const datum: Datum = {
-        timestamp: currentData.timestamp,
-        voltage: currentData.batteryData?.voltage,
-        current: Math.abs(currentData.batteryData?.current),
+        timestamp: liveData.timestamp,
+        voltage: liveData?.voltage,
+        current: Math.abs(liveData?.current),
       };
 
       chartRef.current.data.datasets.forEach((dataset) => dataset.data.push(datum));
       chartRef.current.update('quiet');
     }
-  }, [currentData]);
+  }, [liveData]);
 
   return (
     <ChartContainer>

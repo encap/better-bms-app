@@ -1,13 +1,15 @@
-import { Data, InternalData } from './data';
-import { CommandDefinition, ProtocolSpecification } from './protocol';
+import { InternalData, ResponseDataTypeRecord, ResponseDataTypes } from './data';
+import { ProtocolSpecification } from './protocol';
 
-export type DecodedResponseData = Pick<Data, 'batteryData' | 'deviceInfo'> & {
-  internalData: InternalData;
-};
-
+export type DecodedResponseData<T extends ResponseDataTypes> = Partial<ResponseDataTypeRecord[T]> &
+  Partial<InternalData>;
 export interface Decoder<T extends string> {
   protocol: ProtocolSpecification<T>;
 
-  decode(commnand: CommandDefinition<T>, responseBuffer: Uint8Array): DecodedResponseData;
+  decode<T extends ResponseDataTypes>(
+    responseType: T,
+    responseSignature: Uint8Array,
+    responseBuffer: Uint8Array
+  ): DecodedResponseData<T>;
   getUnpackedProtocol(): ProtocolSpecification<T>;
 }
