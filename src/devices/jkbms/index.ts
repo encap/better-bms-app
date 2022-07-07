@@ -408,7 +408,7 @@ export class JKBMS implements Device {
     }
   }
 
-  private async sendCommand(commandName: JKBMS_COMMANDS): Promise<void> {
+  private async sendCommand(commandName: JKBMS_COMMANDS, payload?: Uint8Array): Promise<void> {
     DeviceLog.info(`Preparing to send command ${commandName}`, this);
     if (!this.characteristic) {
       throw new Error(`Device must be connected to send a command`);
@@ -429,14 +429,20 @@ export class JKBMS implements Device {
       throw new Error(`Send command ${commandName} took longer than ${command.timeout}ms`);
     }, command.timeout);
 
-    const commandPayload = this.constructCommandPayload(command);
+    const preparedCommand = this.constructCommandPayload(command, payload);
 
     try {
       DeviceLog.log(
-        `Sending command payload ${commandName} to ${this.characteristic.service.device.name}`,
-        { command, commandPayload }
+        `Sending command ${commandName} ${
+          payload ? `with payload ${bufferToHexString(payload, '', '', '0x')}` : ''
+        } to ${this.characteristic.service.device.name}`,
+        { command, preparedCommand }
       );
-      await this.characteristic.writeValueWithoutResponse(commandPayload.buffer);
+      if (payload) {
+        await this.characteristic.writeValueWithResponse(preparedCommand.buffer);
+      } else {
+        await this.characteristic.writeValueWithoutResponse(preparedCommand.buffer);
+      }
     } catch (error) {
       console.error(error);
       const msg = `Sending command ${commandName} failed`;
@@ -454,14 +460,29 @@ export class JKBMS implements Device {
     }
   }
 
-  private constructCommandPayload(command: Required<CommandDefinition>): Uint8Array {
+  private constructCommandPayload(
+    command: Required<CommandDefinition>,
+    payload: Uint8Array = new Uint8Array([])
+  ): Uint8Array {
     DeviceLog.debug(`Constructing payload for ${command.name}`, { command });
-    const template = new Uint8Array(20);
-    const commandBuffer = new Uint8Array([
+    const template = new Uint8Array(this.protocol.commandLength);
+    const tempBuffer = new Uint8Array([
       ...this.protocol.commandHeader,
       ...command.code,
-      ...template,
-    ]).slice(0, template.length);
+      ...payload,
+    ]);
+
+    if (this.protocol.commandLength && tempBuffer.byteLength > this.protocol.commandLength) {
+      const msg = `Command ${command.name} payload ${tempBuffer.byteLength} B exceeds protocol limit ${this.protocol.commandLength} B`;
+      DeviceLog.error(msg, { command, tempBuffer, payload });
+
+      throw new Error(msg);
+    }
+
+    const commandBuffer = new Uint8Array([...tempBuffer, ...template]).slice(
+      0,
+      this.protocol.commandLength
+    );
     DeviceLog.debug(`Command pre checksum: ${bufferToHexString(commandBuffer)}`, { commandBuffer });
     const checksum = this.calculateChecksum(commandBuffer.slice(0, -1));
 
@@ -472,6 +493,27 @@ export class JKBMS implements Device {
     });
 
     return commandBuffer;
+  }
+
+  async toggleCharging(value: boolean): Promise<void> {
+    try {
+      await this.sendCommand(JKBMS_COMMANDS.TOGGLE_CHARGING, new Uint8Array([value ? 0x01 : 0x00]));
+      DeviceLog.info(`Toggle charging ${value} success. Refetching settings`);
+    } finally {
+      await this.sendCommand(JKBMS_COMMANDS.GET_SETTINGS);
+    }
+  }
+
+  async toggleDischarging(value: boolean): Promise<void> {
+    try {
+      await this.sendCommand(
+        JKBMS_COMMANDS.TOGGLE_DISCHARGING,
+        new Uint8Array([value ? 0x01 : 0x00])
+      );
+      DeviceLog.info(`Toggle discharging ${value} success. Refetching settings`);
+    } finally {
+      await this.sendCommand(JKBMS_COMMANDS.GET_SETTINGS);
+    }
   }
 
   private handleNotification(event: Event): void {

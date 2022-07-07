@@ -37,4 +37,7 @@ export interface Device {
   disconnect(reason: DisconnectReasons): Promise<void>;
 
   pause(): Promise<void>;
+
+  toggleCharging(value: boolean): Promise<void>;
+  toggleDischarging(value: boolean): Promise<void>;
 }

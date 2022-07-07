@@ -9,6 +9,8 @@ import { DecodeLog, GlobalLog } from 'utils/logger';
 export enum JKBMS_COMMANDS {
   GET_DEVICE_INFO = 'GET_DEVICE_INFO',
   GET_SETTINGS = 'GET_SETTINGS',
+  TOGGLE_CHARGING = 'TOGGLE_CHARGING',
+  TOGGLE_DISCHARGING = 'TOGGLE_DISCHARGING',
 }
 
 const responseHeaderWithTypeAndCounter: PackedItemDescription<ResponseDataTypes>[] = [
@@ -47,6 +49,18 @@ export const JKBMS_PROTOCOL: PackedProtocolSpecification<JKBMS_COMMANDS> = {
       responseName: 'SETTINGS',
       timeout: 1000,
       wait: 400,
+    },
+    {
+      name: JKBMS_COMMANDS.TOGGLE_CHARGING,
+      code: new Uint8Array([0x1d, 0x04]),
+      timeout: 1000,
+      wait: 1000,
+    },
+    {
+      name: JKBMS_COMMANDS.TOGGLE_DISCHARGING,
+      code: new Uint8Array([0x1e, 0x04]),
+      timeout: 1000,
+      wait: 1000,
     },
   ],
   responses: [
