@@ -116,8 +116,8 @@ const App = () => {
   }, [status, device]);
 
   return (
-    <AppContainer>
-      <TopBar deviceInfoData={deviceInfoData} liveData={liveData} onClick={handleClickAnywhere} />
+    <AppContainer onClick={handleClickAnywhere}>
+      <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
       {status === 'connected' && <QuickToggles settingsData={settingsData} />}
 
       <ContentContainer onClick={handleClickAnywhere}>
