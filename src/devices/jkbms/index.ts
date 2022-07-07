@@ -21,7 +21,7 @@ import {
 import { CommandDefinition, ProtocolSpecification, ResponseDefinition } from 'interfaces/protocol';
 import { wait } from 'utils/index';
 import { bufferToHexString, intToHexString } from 'utils/binary';
-import { chalk, DeviceLog } from 'utils/logger';
+import { DeviceLog } from 'utils/logger';
 import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
 export class JKBMS implements Device {
@@ -433,9 +433,9 @@ export class JKBMS implements Device {
 
     try {
       DeviceLog.log(
-        `Sending command ${commandName} ${
+        `===== Sending command ${commandName} ${
           payload ? `with payload ${bufferToHexString(payload, '', '', '0x')}` : ''
-        } to ${this.characteristic.service.device.name}`,
+        } to ${this.characteristic.service.device.name} =====`,
         { command, preparedCommand }
       );
       if (payload) {
@@ -746,12 +746,16 @@ export class JKBMS implements Device {
       }
     });
 
-    DeviceLog.log(
-      `New data arrived V: ${
-        (publicData as LiveData)?.voltage || (publicData as DeviceInfoData)?.hardwareVersion
-      } Ping: ${publicData.timeSinceLastOne}ms`,
-      { publicData, decodedData, internalData }
-    );
+    if (dataType === 'LIVE_DATA') {
+      DeviceLog.debug(
+        `${dataType} arrived ${(publicData as LiveData)?.voltage}V Ping: ${
+          publicData.timeSinceLastOne
+        }ms`,
+        { publicData, decodedData, internalData }
+      );
+    } else {
+      DeviceLog.info(`===== ${dataType} data ready. ${Object.keys(publicData).length} items =====`);
+    }
 
     this.cache[dataType] = publicData;
 
