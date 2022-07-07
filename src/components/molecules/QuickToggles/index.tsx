@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { SettingsData } from '../../../interfaces/data';
-import { useDevice } from '../../organisms/providers/DeviceProvider';
+import { SettingsData } from 'interfaces/data';
+import { useDevice } from 'components/providers/DeviceProvider';
 import { QuickTogglesContainer, ToggleWithLabel } from './styles';
 
 type QuickTogglesProps = {

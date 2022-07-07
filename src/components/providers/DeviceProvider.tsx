@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
-import { Device, DeviceStatus } from '../../../interfaces/device';
+import { Device, DeviceStatus } from 'interfaces/device';
 
 export type DeviceContextType = {
   device: Device | null;

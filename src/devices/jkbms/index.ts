@@ -1,17 +1,15 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DeepRequired } from 'ts-essentials';
-import { ResponseDecoder } from '../../decoders/responseDecoder';
+import { ResponseDecoder } from 'decoders/responseDecoder';
 import {
-  Data,
   DeviceInfoData,
   InternalData,
   INTERNAL_KEYS,
   LiveData,
-  ResponseDataTypeKeys,
   ResponseDataTypeRecord,
   ResponseDataTypes,
-} from '../../interfaces/data';
-import { DecodedResponseData } from '../../interfaces/decoder';
+} from 'interfaces/data';
+import { DecodedResponseData } from 'interfaces/decoder';
 import {
   ConnectOptions,
   Device,
@@ -19,15 +17,11 @@ import {
   DeviceIdentificator,
   DeviceStatus,
   DisconnectReasons,
-} from '../../interfaces/device';
-import {
-  CommandDefinition,
-  ProtocolSpecification,
-  ResponseDefinition,
-} from '../../interfaces/protocol';
-import { wait } from '../../utils';
-import { bufferToHexString, intToHexString } from '../../utils/binary';
-import { chalk, DeviceLog } from '../../utils/logger';
+} from 'interfaces/device';
+import { CommandDefinition, ProtocolSpecification, ResponseDefinition } from 'interfaces/protocol';
+import { wait } from 'utils/index';
+import { bufferToHexString, intToHexString } from 'utils/binary';
+import { chalk, DeviceLog } from 'utils/logger';
 import { JKBMS_COMMANDS, JKBMS_PROTOCOL } from './config';
 
 export class JKBMS implements Device {
@@ -119,7 +113,7 @@ export class JKBMS implements Device {
           device = previousDevice;
         } else {
           // We can't call requestBluetoothDevice without second user interaction.
-          // https://developer.chrome.com/blog/user-activation/
+          // https:/developer.chrome.com/blog/user-activation/
           DeviceLog.info(`Disconnecting to allow other devices`, {
             previousDevice,
           });

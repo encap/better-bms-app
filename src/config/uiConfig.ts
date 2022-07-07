@@ -1,4 +1,4 @@
-import { LiveData } from '../interfaces/data';
+import { LiveData } from 'interfaces/data';
 
 export type DataItemUIOptions = {
   label?: string;

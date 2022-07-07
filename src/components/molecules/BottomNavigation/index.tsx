@@ -1,7 +1,7 @@
 import { Tabs } from '@geist-ui/core';
 import { memo } from 'react';
-import { Screens } from '../../organisms/App';
-import { useDevice } from '../../organisms/providers/DeviceProvider';
+import { Screens } from 'components/organisms/App';
+import { useDevice } from 'components/providers/DeviceProvider';
 import { BottomNavigationContainer } from './styles';
 
 type BottomNavigationProps = {

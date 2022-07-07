@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.scss';
 import reportWebVitals from './reportWebVitals';
-import { setupLogger } from './utils/logger';
-import DeviceProvider from './components/organisms/providers/DeviceProvider';
-import App from './components/organisms/App';
+import { setupLogger } from 'utils/logger';
+import DeviceProvider from 'components/providers/DeviceProvider';
+import App from 'components/organisms/App';
 import { CssBaseline, GeistProvider, Themes } from '@geist-ui/core';
 import { ThemeProvider } from 'styled-components';
 
@@ -34,5 +34,5 @@ root.render(
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// or send to an analytics endpoint. Learn more: https:/bit.ly/CRA-vitals
 reportWebVitals();

@@ -13,12 +13,12 @@ import {
   TimeScale,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { LiveData } from '../../../interfaces/data';
+import { LiveData } from 'interfaces/data';
 import 'chartjs-adapter-date-fns';
 import ChartStreaming from 'chartjs-plugin-streaming';
 import { ChartJSOrUndefined } from 'react-chartjs-2/dist/types';
 import { ChartClickArea, ChartContainer, PauseIndicator } from './styles';
-import { UILog } from '../../../utils/logger';
+import { UILog } from 'utils/logger';
 import { useLongPress, LongPressDetectEvents } from 'use-long-press';
 import dayjs from 'dayjs';
 import { useTheme } from 'styled-components';

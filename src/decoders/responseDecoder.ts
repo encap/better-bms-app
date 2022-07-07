@@ -1,13 +1,13 @@
-import { ResponseDataTypes } from '../interfaces/data';
-import { DecodedResponseData, Decoder } from '../interfaces/decoder';
+import { ResponseDataTypes } from 'interfaces/data';
+import { DecodedResponseData, Decoder } from 'interfaces/decoder';
 import {
   ItemDescription,
   PackedProtocolSpecification,
   ProtocolSpecification,
-} from '../interfaces/protocol';
-import { bufferToHexString, intToHexString } from '../utils/binary';
-import { DecodeLog, DeviceLog } from '../utils/logger';
-import { unpackProtocol } from '../utils/unpackProtocol';
+} from 'interfaces/protocol';
+import { bufferToHexString, intToHexString } from 'utils/binary';
+import { DecodeLog, DeviceLog } from 'utils/logger';
+import { unpackProtocol } from 'utils/unpackProtocol';
 
 export class ResponseDecoder<T extends string> implements Decoder<T> {
   protocol: ProtocolSpecification<T>;

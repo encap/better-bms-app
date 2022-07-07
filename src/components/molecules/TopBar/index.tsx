@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { DeviceInfoData, LiveData } from '../../../interfaces/data';
-import { useDevice } from '../../organisms/providers/DeviceProvider';
-import { QuickTogglesContainer } from '../QuickToggles/styles';
+import { DeviceInfoData, LiveData } from 'interfaces/data';
+import { useDevice } from 'components/providers/DeviceProvider';
+import { QuickTogglesContainer } from 'components/molecules/QuickToggles/styles';
 import {
   DeviceStatusText as DeviceStatusTitle,
   PingContainer,

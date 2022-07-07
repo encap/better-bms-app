@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { GlobalLog } from '../utils/logger';
+import { GlobalLog } from 'utils/logger';
 
 export function useWakelock() {
   const wakelokRef = useRef<WakeLockSentinel>();

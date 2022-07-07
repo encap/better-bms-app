@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { DistributiveOmit } from '../interfaces';
-import { ResponseDataTypeKeys, ResponseDataTypes } from '../interfaces/data';
+import { DistributiveOmit } from 'interfaces/index';
+import { ResponseDataTypeKeys, ResponseDataTypes } from 'interfaces/data';
 import {
   ByteLength,
   CommandDefinition,
@@ -17,7 +17,7 @@ import {
   ProtocolSpecification,
   ResponseDefinition,
   TextValueTypes,
-} from '../interfaces/protocol';
+} from 'interfaces/protocol';
 import { DecodeLog } from './logger';
 
 export function unpackProtocol<T extends string>(

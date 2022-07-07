@@ -3,7 +3,7 @@ import { ILogLevel } from 'js-logger';
 import React, { ComponentProps } from 'react';
 import { DefaultTheme, useTheme } from 'styled-components';
 import { LogType } from '..';
-import { LOG_SCOPES } from '../../../../utils/logger';
+import { LOG_SCOPES } from 'utils/logger';
 import { Date, LogItemWrapper, Message, StyledBadge, StyledTag } from './styles';
 
 const levelToTypeMap: Record<ILogLevel['name'], ComponentProps<typeof Tag>['type']> = {

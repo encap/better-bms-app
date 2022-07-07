@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { liveDataUIConfig } from '../config/uiConfig';
-import { DeviceInfoData, LiveData, SettingsData } from '../interfaces/data';
+import { liveDataUIConfig } from 'config/uiConfig';
+import { DeviceInfoData, LiveData, SettingsData } from 'interfaces/data';
 import { GlobalLog } from './logger';
 
 export function formatValue<T extends LiveData>(

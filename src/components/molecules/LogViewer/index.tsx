@@ -1,6 +1,6 @@
 import Logger, { ILogLevel } from 'js-logger';
 import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { consoleHandler, GlobalLog, LOG_SCOPES, UILog } from '../../../utils/logger';
+import { consoleHandler, GlobalLog, LOG_SCOPES, UILog } from 'utils/logger';
 import LogItem from './LogItem';
 import { LogCount, LogViewerContainer, ScrollContainer } from './styles';
 

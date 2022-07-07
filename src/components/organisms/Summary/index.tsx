@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import React, { useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { liveDataUIConfig } from '../../../config/uiConfig';
-import { LiveData } from '../../../interfaces/data';
-import { formatValue } from '../../../utils/formatValue';
-import { LineChart } from '../../molecules/LineChart';
+import { liveDataUIConfig } from 'config/uiConfig';
+import { LiveData } from 'interfaces/data';
+import { formatValue } from 'utils/formatValue';
+import { LineChart } from 'components/molecules/LineChart';
 import {
   CellsGrid,
   SummaryContainer,

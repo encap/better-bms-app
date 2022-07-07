@@ -22,7 +22,8 @@
     "types": [
       "dom-screen-wake-lock",
       "web-bluetooth"
-    ]
+    ],
+    "baseUrl": "src",
   },
   "include": [
     "src"

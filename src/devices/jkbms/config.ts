@@ -1,10 +1,10 @@
-import { ResponseDataTypes } from '../../interfaces/data';
+import { ResponseDataTypes } from 'interfaces/data';
 import {
   PackedItemDescription,
   GetterFunction,
   PackedProtocolSpecification,
-} from '../../interfaces/protocol';
-import { DecodeLog, GlobalLog } from '../../utils/logger';
+} from 'interfaces/protocol';
+import { DecodeLog, GlobalLog } from 'utils/logger';
 
 export enum JKBMS_COMMANDS {
   GET_DEVICE_INFO = 'GET_DEVICE_INFO',
