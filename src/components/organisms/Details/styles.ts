@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const SummaryContainer = styled.div`
+export const DetailsContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -10,22 +10,6 @@ export const SummaryContainer = styled.div`
 export const MainInfoContainer = styled.div`
   display: grid;
   gap: 0px;
-`;
-
-export const MainInfo = styled.h3`
-  text-align: center;
-  font-size: 80px;
-  font-weight: 500;
-  margin: 0;
-  line-height: 90%;
-`;
-
-export const MainInfoUnit = styled.span`
-  font-size: 30px;
-  max-width: 1ch;
-  display: inline-block;
-  overflow: visible;
-  font-weight: 600;
 `;
 
 export const InfoGrid = styled.div`

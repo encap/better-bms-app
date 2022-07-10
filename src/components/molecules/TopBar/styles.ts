@@ -28,6 +28,10 @@ export const PingContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+
+  ${SmallText} {
+    min-width: 55px;
+  }
 `;
 
 const blinkKeyframes = `

@@ -16,6 +16,8 @@ import { useDevice } from 'components/providers/DeviceProvider';
 import Summary from 'components/organisms/Summary';
 import { AppContainer, ContentContainer } from './styles';
 import PageLoader from 'components/atoms/PageLoader';
+import DataLoggerProvider from 'components/providers/DataLogger';
+import Details from '../Details';
 
 export type Screens = 'Logs' | 'Summary' | 'Settings' | 'Details';
 
@@ -126,28 +128,33 @@ const App = () => {
   }, [status, device]);
 
   return (
-    <AppContainer onClick={handleClickAnywhere}>
-      <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
-      {status === 'connected' && <QuickToggles settingsData={settingsData} />}
+    <DataLoggerProvider liveData={liveData}>
+      <AppContainer onClick={handleClickAnywhere}>
+        <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
+        {status === 'connected' && <QuickToggles settingsData={settingsData} />}
 
-      <ContentContainer onClick={handleClickAnywhere}>
-        <Freeze freeze={selectedScreen !== 'Logs'}>
-          <LogViewer />
-        </Freeze>
+        <ContentContainer onClick={handleClickAnywhere}>
+          <Freeze freeze={selectedScreen !== 'Logs'}>
+            <LogViewer />
+          </Freeze>
 
-        {liveData ? (
-          <>
-            <Freeze freeze={selectedScreen !== 'Summary'}>
-              <Summary liveData={liveData} />
-            </Freeze>
-          </>
-        ) : (
-          selectedScreen !== 'Logs' && <PageLoader />
-        )}
-      </ContentContainer>
+          {liveData ? (
+            <>
+              <Freeze freeze={selectedScreen !== 'Summary'}>
+                <Summary liveData={liveData} />
+              </Freeze>
+              <Freeze freeze={selectedScreen !== 'Details'}>
+                <Details liveData={liveData} />
+              </Freeze>
+            </>
+          ) : (
+            selectedScreen !== 'Logs' && <PageLoader />
+          )}
+        </ContentContainer>
 
-      <BottomNavigation selectedScreen={selectedScreen} setSelectedScreen={setSelectedScreen} />
-    </AppContainer>
+        <BottomNavigation selectedScreen={selectedScreen} setSelectedScreen={setSelectedScreen} />
+      </AppContainer>
+    </DataLoggerProvider>
   );
 };
 

@@ -1,7 +1,6 @@
-import { MouseEventHandler, useCallback, useEffect, useRef } from 'react';
+import { memo, MouseEventHandler, useCallback, useEffect, useRef } from 'react';
 import { DeviceInfoData, LiveData } from 'interfaces/data';
 import { useDevice } from 'components/providers/DeviceProvider';
-import { QuickTogglesContainer } from 'components/molecules/QuickToggles/styles';
 import {
   DeviceStatusText as DeviceStatusTitle,
   PingContainer,
@@ -52,9 +51,8 @@ const TopBar = ({ deviceInfoData, liveData, onClick }: TopBarProps) => {
           </PingContainer>
         )}
       </TopBarContainer>
-      <QuickTogglesContainer />
     </>
   );
 };
 
-export default TopBar;
+export default memo(TopBar);

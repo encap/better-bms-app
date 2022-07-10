@@ -1,34 +1,16 @@
-import classNames from 'classnames';
-import React, { useMemo } from 'react';
+import React, { memo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { liveDataUIConfig } from 'config/uiConfig';
 import { LiveData } from 'interfaces/data';
 import { formatValue } from 'utils/formatValue';
-import { LineChart } from 'components/molecules/LineChart';
-import {
-  CellsGrid,
-  SummaryContainer,
-  InfoGrid,
-  MainInfoContainer,
-  MainInfo,
-  MainInfoUnit,
-} from './styles';
-import { Grid, Loading } from '@geist-ui/core';
+import { SummaryContainer, InfoGrid, MainInfoContainer, MainInfo, MainInfoUnit } from './styles';
+import LineChart from 'components/molecules/LineChart';
 
 type SummaryProps = {
   liveData: LiveData;
 };
 
 const Summary = ({ liveData }: SummaryProps) => {
-  const lowestVol = useMemo(
-    () => (liveData.voltages ? Math.min(...liveData.voltages.filter((v) => v !== 0)) : 0),
-    [liveData]
-  );
-  const highestVol = useMemo(
-    () => (liveData.voltages ? Math.max(...liveData.voltages) : 0),
-    [liveData]
-  );
-
   return (
     <SummaryContainer>
       <MainInfoContainer>
@@ -51,7 +33,7 @@ const Summary = ({ liveData }: SummaryProps) => {
       </MainInfoContainer>
 
       <ErrorBoundary fallback={<div />}>
-        <LineChart liveData={liveData} />
+        <LineChart duration={1000 * 60 * 2} frameRate={5} />
       </ErrorBoundary>
 
       <InfoGrid>
@@ -65,6 +47,11 @@ const Summary = ({ liveData }: SummaryProps) => {
 
         {Object.entries(liveData || {})
           .filter(([key, name]) => Object.hasOwn(liveDataUIConfig, key) && typeof name !== 'object')
+          .filter(([key]) =>
+            (['cellVoltageDelta', 'balanceCurrent'] as (keyof LiveData)[]).includes(
+              key as keyof LiveData
+            )
+          )
           // @ts-ignore
           .map(([name, value]: [string, number]) => (
             <React.Fragment key={name}>
@@ -75,25 +62,8 @@ const Summary = ({ liveData }: SummaryProps) => {
             </React.Fragment>
           ))}
       </InfoGrid>
-
-      <CellsGrid>
-        {liveData.voltages?.map((voltage, i) => (
-          <span
-            key={i}
-            className={classNames(
-              liveData.cellVoltageDelta > 0.004 &&
-                voltage !== 0 &&
-                (voltage === lowestVol ? 'lowest' : voltage === highestVol ? 'highest' : '')
-            )}
-          >
-            {`${String(i + 1).padStart(2, '0')}: ${
-              voltage ? voltage.toFixed(3) : '\xa0-\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'
-            }`}
-          </span>
-        ))}
-      </CellsGrid>
     </SummaryContainer>
   );
 };
 
-export default Summary;
+export default memo(Summary);
