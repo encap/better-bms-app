@@ -5,11 +5,33 @@ export type GagueStyleProps = {
 };
 
 export const BarGaugeContainer = styled.div<GagueStyleProps>`
+  @keyframes ripple {
+    50% {
+      opacity: 0.4;
+      transform: scale(2.1);
+    }
+    100% {
+      opacity: 0.1;
+      transform: scale(1);
+    }
+  }
   width: 14px;
   height: 100%;
   position: relative;
   overflow: hidden;
   background: ${({ background }) => background};
+`;
+
+export const RippleContainer = styled.div`
+  position: absolute;
+  height: 200%;
+  width: 100%;
+  top: 100%;
+  border-radius: 100px;
+  background-color: white;
+  background: radial-gradient(white, white 25%, rgba(255, 255, 255, 0.8) 100%);
+  transform: scale(0);
+  opacity: 0;
 `;
 
 export const GaugeValue = styled.div`
