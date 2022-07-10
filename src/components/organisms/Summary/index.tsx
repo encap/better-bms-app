@@ -13,6 +13,7 @@ import {
   MainInfo,
   MainInfoUnit,
 } from './styles';
+import { Grid, Loading } from '@geist-ui/core';
 
 type SummaryProps = {
   liveData: LiveData;

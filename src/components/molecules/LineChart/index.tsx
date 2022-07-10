@@ -215,7 +215,6 @@ export function LineChart({ liveData }: LineChartProps) {
       };
 
       chartRef.current.data.datasets.forEach((dataset) => dataset.data.push(datum));
-      chartRef.current.update('quiet');
     }
   }, [liveData]);
 

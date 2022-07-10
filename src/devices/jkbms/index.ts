@@ -143,6 +143,7 @@ export class JKBMS implements Device {
 
     try {
       DeviceLog.info(`Connecting to device ${device.name}`, { device });
+      this.setStatus('connecting');
       const server = await device.gatt?.connect().catch((error) => {
         console.error(error);
         throw new Error(`Can't connect to GAAT Server of ${device?.name}`);
@@ -349,9 +350,12 @@ export class JKBMS implements Device {
   }
 
   private async requestBluetoothDevice(): Promise<BluetoothDevice> {
-    DeviceLog.info(`Scanning for devices with ${this.protocol.serviceUuid} uuid`, {
-      serviceUuid: this.protocol.serviceUuid,
-    });
+    DeviceLog.info(
+      `Scanning for devices with ${intToHexString(this.protocol.serviceUuid, '0x')} uuid`,
+      {
+        serviceUuid: this.protocol.serviceUuid,
+      }
+    );
     const device = await navigator.bluetooth.requestDevice({
       filters: [
         {

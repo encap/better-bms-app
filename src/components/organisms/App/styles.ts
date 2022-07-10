@@ -18,7 +18,7 @@ export const ContentContainer = styled.main`
   max-height: 100%;
   flex-basis: 0;
   margin: 16px 0 0;
-  padding: 0 16px 16px;
+  padding: 0 16px 4px;
   position: relative;
   display: flex;
   flex-direction: column;

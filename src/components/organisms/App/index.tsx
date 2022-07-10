@@ -1,4 +1,4 @@
-import { Grid, Loading, useToasts } from '@geist-ui/core';
+import { useToasts } from '@geist-ui/core';
 import { useCallback, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
 import { useLocalStorage } from 'react-use';
@@ -15,6 +15,7 @@ import TopBar from 'components/molecules/TopBar';
 import { useDevice } from 'components/providers/DeviceProvider';
 import Summary from 'components/organisms/Summary';
 import { AppContainer, ContentContainer } from './styles';
+import PageLoader from 'components/atoms/PageLoader';
 
 export type Screens = 'Logs' | 'Summary' | 'Settings' | 'Details';
 
@@ -56,6 +57,12 @@ const App = () => {
       },
       onStatusChange(newStatus) {
         setStatus(newStatus);
+        if (newStatus === 'connecting') {
+          setLiveData(null);
+          setDeviceInfoData(null);
+          setSettingsData(null);
+          setSelectedScreen('Summary');
+        }
       },
       async onConnected(deviceIdentificator) {
         setPreviousDevice(deviceIdentificator);
@@ -71,8 +78,11 @@ const App = () => {
           });
         }
 
-        // setData(null);
         releaseWakelock();
+
+        if (!liveData) {
+          setSelectedScreen('Logs');
+        }
       },
       onError(error) {
         console.error(error);
@@ -125,30 +135,15 @@ const App = () => {
           <LogViewer />
         </Freeze>
 
-        {(() => {
-          if (liveData?.voltage) {
-            switch (selectedScreen) {
-              case 'Summary': {
-                return <Summary liveData={liveData} />;
-              }
-            }
-          } else {
-            <Grid.Container gap={2.5}>
-              <Grid xs={24}>
-                <Loading type='success' spaceRatio={2} />
-              </Grid>
-              <Grid xs={24}>
-                <Loading type='secondary' spaceRatio={2} />
-              </Grid>
-              <Grid xs={24}>
-                <Loading type='warning' spaceRatio={2} />
-              </Grid>
-              <Grid xs={24}>
-                <Loading type='error' spaceRatio={2} />
-              </Grid>
-            </Grid.Container>;
-          }
-        })()}
+        {liveData ? (
+          <>
+            <Freeze freeze={selectedScreen !== 'Summary'}>
+              <Summary liveData={liveData} />
+            </Freeze>
+          </>
+        ) : (
+          selectedScreen !== 'Logs' && <PageLoader />
+        )}
       </ContentContainer>
 
       <BottomNavigation selectedScreen={selectedScreen} setSelectedScreen={setSelectedScreen} />
