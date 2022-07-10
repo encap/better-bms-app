@@ -12,9 +12,9 @@ const BarGauge = ({ value, max, duration, ...gaugeValueProps }: BarGaugeProps) =
 
   useEffect(() => {
     if (gaugeRef.current) {
-      const percent = (value / max) * 100;
+      const percent = (Math.min(value || 0, max) / max) * 100;
 
-      gaugeRef.current.style.transitionDuration = `${duration * 1.25}ms`;
+      gaugeRef.current.style.transitionDuration = `${Math.max(duration * 1.25, 100)}ms`;
       gaugeRef.current.style.transform = `translate3d(0, -${percent}%, 0)`;
     }
   }, [value]);

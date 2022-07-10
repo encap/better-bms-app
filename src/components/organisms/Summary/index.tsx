@@ -16,6 +16,7 @@ import { useFirstMountState, usePrevious } from 'react-use';
 import { InfoGrid } from '../Details/styles';
 import BarGauge from 'components/molecules/BarGauge';
 import { useTheme } from 'styled-components';
+import chroma from 'chroma-js';
 
 type SummaryProps = {
   liveData: LiveData;
@@ -26,6 +27,13 @@ const Summary = ({ liveData }: SummaryProps) => {
   const [speed, setSpeed] = useState<number | null>(null);
   const previousLiveData = usePrevious(liveData);
   const isFirstMount = useFirstMountState();
+
+  const powerGradient = useMemo(() => {
+    // Nicer gradient interpolation using LinearRGB method
+    const scale = chroma.scale([theme.success, theme.error]).mode('lrgb').colors(10);
+
+    return `linear-gradient(to top, ${scale.join(', ')} 80%)`;
+  }, [theme]);
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -116,10 +124,10 @@ const Summary = ({ liveData }: SummaryProps) => {
           )}
         </MiddleContainer>
         <BarGauge
-          value={3500 ?? Math.random() * 3500}
+          value={liveData.power > 10 ? liveData.power : 0}
           max={3500}
           duration={liveData.timeSinceLastOne}
-          background={`linear-gradient(to top, ${theme.success}, ${theme.error})`}
+          background={powerGradient}
         />
       </MainInfoContainer>
 

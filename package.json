@@ -16,6 +16,7 @@
     "chart.js": "^3.8.0",
     "chartjs-adapter-date-fns": "^2.0.0",
     "chartjs-plugin-streaming": "^2.0.0",
+    "chroma-js": "^2.4.2",
     "classnames": "^2.3.1",
     "date-fns": "^2.28.0",
     "dayjs": "^1.11.3",
@@ -61,6 +62,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
+    "@types/chroma-js": "^2.1.4",
     "@types/dom-screen-wake-lock": "^1.0.0",
     "@types/styled-components": "^5.1.25",
     "@types/web-bluetooth": "^0.0.14",
