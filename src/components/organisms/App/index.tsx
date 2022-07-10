@@ -1,5 +1,5 @@
 import { useToasts } from '@geist-ui/core';
-import { MouseEventHandler, useCallback, useEffect, useState } from 'react';
+import { MouseEventHandler, useCallback, useEffect, useRef, useState } from 'react';
 import { Freeze } from 'react-freeze';
 import { useLocalStorage } from 'react-use';
 import { PREVIOUS_DEVICE_LOCAL_STORAGE_KEY } from 'config/index';
@@ -19,6 +19,8 @@ import PageLoader from 'components/atoms/PageLoader';
 import DataLoggerProvider from 'components/providers/DataLogger';
 import Details from '../Details';
 
+const SCREENSAVER_TIMEOUT = 1000 * 60 * 1;
+
 export type Screens = 'Logs' | 'Summary' | 'Settings' | 'Details';
 
 const App = () => {
@@ -26,6 +28,9 @@ const App = () => {
     PREVIOUS_DEVICE_LOCAL_STORAGE_KEY,
     null
   );
+
+  const [isScreensaver, setIsScreensaver] = useState(false);
+  const screensaverTimeout = useRef<NodeJS.Timer | null>(null);
 
   const { device, status, setDevice, setStatus } = useDevice();
   const { acquireWakelock, releaseWakelock } = useWakelock();
@@ -37,6 +42,20 @@ const App = () => {
   const [settingsData, setSettingsData] = useState<SettingsData | null>(null);
 
   const [selectedScreen, setSelectedScreen] = useState<Screens>('Logs');
+
+  const scheduleScreensaver = useCallback(() => {
+    if (!isScreensaver) {
+      if (screensaverTimeout.current) {
+        clearTimeout(screensaverTimeout.current);
+      }
+      UILog.info(
+        `After ${
+          SCREENSAVER_TIMEOUT / 1000 / 60
+        }min of inactivity screen will be dimmed to prevent burn in`
+      );
+      screensaverTimeout.current = setTimeout(() => setIsScreensaver(true), SCREENSAVER_TIMEOUT);
+    }
+  }, [isScreensaver]);
 
   useEffect(() => {
     UILog.info('App rendered');
@@ -81,6 +100,7 @@ const App = () => {
         }
 
         releaseWakelock();
+        scheduleScreensaver();
 
         if (!liveData) {
           setSelectedScreen('Logs');
@@ -121,6 +141,8 @@ const App = () => {
 
   const handleClickAnywhere = useCallback<MouseEventHandler>(
     (ev) => {
+      setIsScreensaver(false);
+
       if (status === 'disconnected') {
         ev.stopPropagation();
         device?.connect({
@@ -130,6 +152,31 @@ const App = () => {
     },
     [status, device]
   );
+
+  useEffect(() => {
+    if (isScreensaver && liveData && liveData.current < -0.2) {
+      setIsScreensaver(false);
+    }
+    if (!screensaverTimeout.current && liveData && liveData.current >= 0) {
+      scheduleScreensaver();
+    }
+  }, [liveData]);
+
+  useEffect(() => {
+    if (isScreensaver) {
+      UILog.info(`Dimming the screen to prevent burn in`);
+      // Prevent OLED burn in
+      releaseWakelock();
+      document.body.style.opacity = '0.2';
+      if (screensaverTimeout.current) {
+        clearTimeout(screensaverTimeout.current);
+      }
+    } else {
+      acquireWakelock();
+      document.body.style.opacity = '1';
+      scheduleScreensaver();
+    }
+  }, [isScreensaver]);
 
   return (
     <DataLoggerProvider liveData={liveData}>
