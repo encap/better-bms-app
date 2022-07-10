@@ -14,10 +14,10 @@ export const MainInfoContainer = styled.div`
 
 export const InfoGrid = styled.div`
   width: 100%;
-  padding: 0 16px;
+  padding: 0 8px;
   margin: 16px 0;
   display: grid;
-  grid-template-columns: 1fr 55px 1fr 55px;
+  grid-template-columns: 1fr 70px 1fr 70px;
   grid-gap: 6px 5px;
   max-width: 100%;
   font-size: 16px;
