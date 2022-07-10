@@ -6,6 +6,7 @@ export const ToolbarContainer = styled.div`
   grid-template-columns: minmax(0, 1fr) 3fr minmax(0, 1fr);
   padding: 8px 16px 0px;
   align-items: center;
+  position: relative;
 `;
 
 export const DeviceStatusText = styled.h2`

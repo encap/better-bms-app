@@ -1,4 +1,4 @@
-import { memo, MouseEventHandler, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { DeviceInfoData, LiveData } from 'interfaces/data';
 import { useDevice } from 'components/providers/DeviceProvider';
 import {
@@ -8,14 +8,14 @@ import {
   SmallText,
   ToolbarContainer as TopBarContainer,
 } from './styles';
+import { useLongPress } from 'use-long-press';
 
 type TopBarProps = {
   deviceInfoData: DeviceInfoData | null;
   liveData: LiveData | null;
-  onClick?: MouseEventHandler;
 };
 
-const TopBar = ({ deviceInfoData, liveData, onClick }: TopBarProps) => {
+const TopBar = ({ deviceInfoData, liveData }: TopBarProps) => {
   const heartbeatToggle = useRef(false);
 
   const { device, status } = useDevice();
@@ -24,16 +24,15 @@ const TopBar = ({ deviceInfoData, liveData, onClick }: TopBarProps) => {
     heartbeatToggle.current = !heartbeatToggle.current;
   }, [liveData]);
 
-  const handleStatusClick = useCallback<MouseEventHandler>(
-    (event) => {
-      if (status !== 'disconnected') {
-        device?.disconnect('user');
-      } else {
-        onClick?.(event);
-      }
-    },
-    [device, status, onClick]
-  );
+  const handleStatusClick = useCallback(() => {
+    if (status !== 'disconnected') {
+      device?.disconnect('user');
+    }
+  }, [device, status]);
+
+  const bindLongPress = useLongPress(handleStatusClick, {
+    threshold: 1000,
+  });
 
   return (
     <>
@@ -41,7 +40,7 @@ const TopBar = ({ deviceInfoData, liveData, onClick }: TopBarProps) => {
         {status === 'connected' && deviceInfoData?.firmwareVersion && (
           <SmallText>{deviceInfoData.firmwareVersion}</SmallText>
         )}
-        <DeviceStatusTitle onClick={handleStatusClick}>
+        <DeviceStatusTitle {...bindLongPress()}>
           {status === 'disconnected' ? `Click anywhere to connect` : status}
         </DeviceStatusTitle>
         {status === 'connected' && liveData?.timeSinceLastOne && (

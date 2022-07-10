@@ -1,5 +1,5 @@
 import { useToasts } from '@geist-ui/core';
-import { useCallback, useEffect, useState } from 'react';
+import { MouseEventHandler, useCallback, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
 import { useLocalStorage } from 'react-use';
 import { PREVIOUS_DEVICE_LOCAL_STORAGE_KEY } from 'config/index';
@@ -117,15 +117,19 @@ const App = () => {
     return () => {
       newDevice.disconnect('reset');
     };
-  }, []);
+  }, [setStatus, setDevice]);
 
-  const handleClickAnywhere = useCallback(() => {
-    if (status === 'disconnected') {
-      device?.connect({
-        previous: previousDevice ?? undefined,
-      });
-    }
-  }, [status, device]);
+  const handleClickAnywhere = useCallback<MouseEventHandler>(
+    (ev) => {
+      if (status === 'disconnected') {
+        ev.stopPropagation();
+        device?.connect({
+          previous: previousDevice ?? undefined,
+        });
+      }
+    },
+    [status, device]
+  );
 
   return (
     <DataLoggerProvider liveData={liveData}>
@@ -133,7 +137,7 @@ const App = () => {
         <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
         {status === 'connected' && <QuickToggles settingsData={settingsData} />}
 
-        <ContentContainer onClick={handleClickAnywhere}>
+        <ContentContainer>
           <Freeze freeze={selectedScreen !== 'Logs'}>
             <LogViewer />
           </Freeze>
