@@ -9,7 +9,18 @@ export const SummaryContainer = styled.div`
 
 export const MainInfoContainer = styled.div`
   display: grid;
-  gap: 0px;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  padding: 0px 3px 8px;
+`;
+
+export const MiddleContainer = styled.div`
+  display: grid;
+  gap: 25px;
+  grid-column: 2;
 `;
 
 export const MainInfo = styled.h3`
@@ -18,6 +29,8 @@ export const MainInfo = styled.h3`
   font-weight: 500;
   margin: 0;
   line-height: 90%;
+  line-height: 0.7;
+  padding-top: 0.05em;
 `;
 
 export const MainInfoUnit = styled.span`

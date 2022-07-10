@@ -3,17 +3,26 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { liveDataUIConfig } from 'config/uiConfig';
 import { LiveData } from 'interfaces/data';
 import { formatValue } from 'utils/formatValue';
-import { SummaryContainer, MainInfoContainer, MainInfo, MainInfoUnit } from './styles';
+import {
+  SummaryContainer,
+  MiddleContainer,
+  MainInfo,
+  MainInfoUnit,
+  MainInfoContainer,
+} from './styles';
 import LineChart from 'components/molecules/LineChart';
 import { GlobalLog } from 'utils/logger';
 import { useFirstMountState, usePrevious } from 'react-use';
 import { InfoGrid } from '../Details/styles';
+import BarGauge from 'components/molecules/BarGauge';
+import { useTheme } from 'styled-components';
 
 type SummaryProps = {
   liveData: LiveData;
 };
 
 const Summary = ({ liveData }: SummaryProps) => {
+  const theme = useTheme();
   const [speed, setSpeed] = useState<number | null>(null);
   const previousLiveData = usePrevious(liveData);
   const isFirstMount = useFirstMountState();
@@ -71,33 +80,47 @@ const Summary = ({ liveData }: SummaryProps) => {
   return (
     <SummaryContainer>
       <MainInfoContainer>
-        <MainInfo>
-          {String(liveData.voltage.toFixed(5)).slice(0, 5)}
-          <MainInfoUnit>{'V'}</MainInfoUnit>
-        </MainInfo>
-        <MainInfo>
-          {String(liveData.current.toFixed(5)).slice(0, 5)}
-          <MainInfoUnit>{'A'}</MainInfoUnit>
-        </MainInfo>
-        <MainInfo>
-          {String(liveData.power.toFixed(5)).slice(0, 5)}
-          <MainInfoUnit>{'W'}</MainInfoUnit>
-        </MainInfo>
-        {remainingRange === null ? (
-          <>
-            <MainInfo>
-              {String(liveData.remainingCapacity.toFixed(5)).slice(0, 5)}
-              <MainInfoUnit>{'Ah'}</MainInfoUnit>
-            </MainInfo>
-          </>
-        ) : (
-          <>
-            <MainInfo>
-              {String(remainingRange.toFixed(5)).slice(0, 5)}
-              <MainInfoUnit>{'Km'}</MainInfoUnit>
-            </MainInfo>
-          </>
-        )}
+        <BarGauge
+          value={liveData.percentage || 0}
+          max={100}
+          duration={liveData.timeSinceLastOne}
+          background='white'
+        />
+        <MiddleContainer>
+          <MainInfo>
+            {String(liveData.voltage.toFixed(5)).slice(0, 5)}
+            <MainInfoUnit>{'V'}</MainInfoUnit>
+          </MainInfo>
+          <MainInfo>
+            {String(liveData.current.toFixed(5)).slice(0, 5)}
+            <MainInfoUnit>{'A'}</MainInfoUnit>
+          </MainInfo>
+          <MainInfo>
+            {String(liveData.power.toFixed(5)).slice(0, 5)}
+            <MainInfoUnit>{'W'}</MainInfoUnit>
+          </MainInfo>
+          {remainingRange === null ? (
+            <>
+              <MainInfo>
+                {String(liveData.remainingCapacity.toFixed(5)).slice(0, 5)}
+                <MainInfoUnit>{'Ah'}</MainInfoUnit>
+              </MainInfo>
+            </>
+          ) : (
+            <>
+              <MainInfo>
+                {String(remainingRange.toFixed(5)).slice(0, 5)}
+                <MainInfoUnit>{'Km'}</MainInfoUnit>
+              </MainInfo>
+            </>
+          )}
+        </MiddleContainer>
+        <BarGauge
+          value={3500 ?? Math.random() * 3500}
+          max={3500}
+          duration={liveData.timeSinceLastOne}
+          background={`linear-gradient(to top, ${theme.success}, ${theme.error})`}
+        />
       </MainInfoContainer>
 
       <ErrorBoundary fallback={<div />}>
