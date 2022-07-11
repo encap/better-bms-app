@@ -19,7 +19,7 @@ import PageLoader from 'components/atoms/PageLoader';
 import DataLoggerProvider from 'components/providers/DataLogger';
 import Details from '../Details';
 
-const SCREENSAVER_TIMEOUT = 1000 * 60 * 1;
+const SCREENSAVER_TIMEOUT = 1000 * 60 * 5;
 
 export type Screens = 'Logs' | 'Summary' | 'Settings' | 'Details';
 
