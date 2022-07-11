@@ -142,6 +142,7 @@ const App = () => {
   const handleClickAnywhere = useCallback<MouseEventHandler>(
     (ev) => {
       setIsScreensaver(false);
+      scheduleScreensaver();
 
       if (status === 'disconnected') {
         ev.stopPropagation();
