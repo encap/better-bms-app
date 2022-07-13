@@ -61,7 +61,7 @@ const Summary = ({ liveData }: SummaryProps) => {
     }
 
     return null;
-  }, [liveData]);
+  }, [liveData, speed]);
 
   const remainingRange = useMemo(() => {
     if (mileage) {
@@ -143,7 +143,7 @@ const Summary = ({ liveData }: SummaryProps) => {
             <span>{`${(speed || 0).toFixed(1)}km/h`}</span>
 
             <label>{'Mileage: '}</label>
-            <span>{`${(mileage || 0).toFixed(1)}wh/km`}</span>
+            <span>{`${(mileage || 0).toFixed(0)}wh/km`}</span>
           </>
         )}
 
