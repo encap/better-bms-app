@@ -47,6 +47,7 @@ const App = () => {
     if (!isScreensaver) {
       if (screensaverTimeout.current) {
         clearTimeout(screensaverTimeout.current);
+        screensaverTimeout.current = null;
       }
       UILog.info(
         `After ${
@@ -171,6 +172,7 @@ const App = () => {
       document.body.style.opacity = '0.2';
       if (screensaverTimeout.current) {
         clearTimeout(screensaverTimeout.current);
+        screensaverTimeout.current = null;
       }
     } else {
       acquireWakelock();
