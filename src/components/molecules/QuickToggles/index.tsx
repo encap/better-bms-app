@@ -89,6 +89,7 @@ const QuickToggles = ({ settingsData }: QuickTogglesProps) => {
           onClick={blockInputIfLoading}
           scale={3}
           disabled={isDisabled}
+          type='success'
         />
       </ToggleWithLabel>
       <ToggleWithLabel>
@@ -99,6 +100,7 @@ const QuickToggles = ({ settingsData }: QuickTogglesProps) => {
           onClick={blockInputIfLoading}
           scale={3}
           disabled={isDisabled}
+          type='error'
         />
       </ToggleWithLabel>
     </QuickTogglesContainer>
