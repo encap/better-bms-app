@@ -5,7 +5,6 @@ export const AppContainer = styled.div`
   flex-direction: column;
   align-items: center;
   color: white;
-  cursor: pointer;
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
   width: 100%;
   height: 100%;
