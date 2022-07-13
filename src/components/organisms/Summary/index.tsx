@@ -38,8 +38,13 @@ const Summary = ({ liveData }: SummaryProps) => {
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
       (position) => {
+        GlobalLog.info(
+          `Speed: ${position?.coords?.speed === null ? null : position.coords.speed * 3.6} acc: ${
+            position.coords.accuracy
+          } power: ${liveData.power}`
+        );
         if (position.coords?.accuracy < 100) {
-          setSpeed(position?.coords?.speed ?? null);
+          setSpeed(position?.coords?.speed === null ? null : position.coords.speed * 3.6);
         } else {
           setSpeed(null);
         }
@@ -54,7 +59,7 @@ const Summary = ({ liveData }: SummaryProps) => {
   }, [liveData]);
 
   const mileage = useMemo(() => {
-    if (speed && speed > 1.5 && liveData.power > 50) {
+    if (speed && speed > 1.5 && liveData.power > 0) {
       const avgPower = (previousLiveData?.power ?? liveData.power) + liveData.power / 2;
 
       return avgPower / speed;
@@ -64,7 +69,7 @@ const Summary = ({ liveData }: SummaryProps) => {
   }, [liveData, speed]);
 
   const remainingRange = useMemo(() => {
-    if (mileage) {
+    if (mileage && mileage > 1) {
       const remainingEnergy =
         liveData.remainingCapacity * (liveData.nominalVoltage || Math.min(72, liveData.voltage));
 
@@ -137,15 +142,13 @@ const Summary = ({ liveData }: SummaryProps) => {
       </ErrorBoundary>
 
       <InfoGrid>
-        {mileage !== null && (
-          <>
-            <label>{'Speed: '}</label>
-            <span>{`${(speed || 0).toFixed(1)}km/h`}</span>
+        <>
+          <label>{'Speed: '}</label>
+          <span>{speed === null ? `-` : `${(speed || 0).toFixed(1)}km/h`}</span>
 
-            <label>{'Mileage: '}</label>
-            <span>{`${(mileage || 0).toFixed(0)}wh/km`}</span>
-          </>
-        )}
+          <label>{'Mileage: '}</label>
+          <span>{mileage === null ? `-` : `${(mileage || 0).toFixed(0)}wh/km`}</span>
+        </>
 
         {formatValue(liveData, 'temperatureProbes', liveData.temperatureProbes?.[0], 'T control')}
         {formatValue(liveData, 'temperatureProbes', liveData.temperatureProbes?.[1], 'T positive')}
