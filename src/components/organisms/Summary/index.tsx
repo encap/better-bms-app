@@ -25,7 +25,7 @@ type SummaryProps = {
 
 const Summary = ({ liveData }: SummaryProps) => {
   const theme = useTheme();
-  const [speed, setSpeed] = useState<number | null>(null);
+  const speed = useRef<number | null>(null);
   const previousLiveData = usePrevious(liveData);
   const isFirstMount = useFirstMountState();
   const geolocationWatcherRef = useRef<number | null>(null);
@@ -42,20 +42,17 @@ const Summary = ({ liveData }: SummaryProps) => {
     if (status === 'connected') {
       navigator.geolocation?.watchPosition(
         (position) => {
-          GlobalLog.info(
-            `Speed: ${position?.coords?.speed === null ? null : position.coords.speed * 3.6} acc: ${
-              position.coords.accuracy
-            } power: ${liveData.power}`
-          );
-          if (position.coords?.accuracy < 100) {
-            setSpeed(position?.coords?.speed === null ? null : position.coords.speed * 3.6);
+          const kmh = position?.coords?.speed === null ? null : position.coords.speed * 3.6;
+
+          if (position.coords?.accuracy < 35) {
+            speed.current = kmh;
           } else {
-            setSpeed(null);
+            speed.current = null;
           }
         },
         null,
         {
-          maximumAge: 0,
+          maximumAge: 1000,
           timeout: 2000,
           enableHighAccuracy: true,
         }
@@ -65,17 +62,17 @@ const Summary = ({ liveData }: SummaryProps) => {
         navigator.geolocation.clearWatch(geolocationWatcherRef.current);
       }
     }
-  }, [status, setSpeed]);
+  }, [status]);
 
   const mileage = useMemo(() => {
-    if (speed && speed > 1.5 && liveData.power > 50) {
+    if (speed.current && speed.current > 1.5 && liveData.power >= 100) {
       const avgPower = (previousLiveData?.power ?? liveData.power) + liveData.power / 2;
 
-      return avgPower / speed;
+      return avgPower / speed.current;
     }
 
     return null;
-  }, [liveData, speed]);
+  }, [liveData]);
 
   const remainingRange = useMemo(() => {
     if (mileage && mileage > 1) {
@@ -92,13 +89,16 @@ const Summary = ({ liveData }: SummaryProps) => {
 
   useEffect(() => {
     if (!isFirstMount) {
-      if (speed === null) {
-        GlobalLog.info(`Tracking speed end estimating milage`);
+      if (speed.current === null) {
+        GlobalLog.info(
+          `Tracking speed (${speed.current} km/h) end estimating milage (${mileage}km)`,
+          { speed }
+        );
       } else {
         GlobalLog.info(`Not tracking speed. Milage not available`);
       }
     }
-  }, [speed === null]);
+  }, [speed.current === null]);
 
   return (
     <SummaryContainer>
@@ -153,10 +153,14 @@ const Summary = ({ liveData }: SummaryProps) => {
       <InfoGrid>
         <>
           <label>{'Speed: '}</label>
-          <span>{speed === null ? `-` : `${(speed || 0).toFixed(1)}km/h`}</span>
+          <span>
+            {speed.current === null
+              ? `-`
+              : `${(speed.current > 2 ? speed.current : 0).toFixed(1)}km/h`}
+          </span>
 
           <label>{'Mileage: '}</label>
-          <span>{mileage === null ? `-` : `${(mileage || 0).toFixed(0)}wh/km`}</span>
+          <span>{mileage === null ? `-` : `${mileage.toFixed(0)}wh/km`}</span>
         </>
 
         {formatValue(liveData, 'temperatureProbes', liveData.temperatureProbes?.[0], 'T control')}
