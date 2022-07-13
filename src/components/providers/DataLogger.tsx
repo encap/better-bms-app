@@ -151,7 +151,7 @@ const DataLoggerProvider = ({
         percentage: liveData.percentage,
         temperatureProbes: liveData.temperatureProbes,
         balanceCurrent: liveData.balanceCurrent,
-        speed: additionalData.speed,
+        speed: additionalData?.speed && additionalData?.speed > 1 ? additionalData.speed : null,
       };
 
       setLiveDataLog((current) => {
