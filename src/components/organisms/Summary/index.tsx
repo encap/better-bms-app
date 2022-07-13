@@ -38,7 +38,7 @@ const Summary = ({ liveData }: SummaryProps) => {
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
       (position) => {
-        if (position.coords?.accuracy > 25) {
+        if (position.coords?.accuracy < 100) {
           setSpeed(position?.coords?.speed ?? null);
         } else {
           setSpeed(null);
@@ -46,8 +46,9 @@ const Summary = ({ liveData }: SummaryProps) => {
       },
       null,
       {
-        maximumAge: 1000,
+        maximumAge: 0,
         timeout: 2000,
+        enableHighAccuracy: true,
       }
     );
   }, [liveData]);
