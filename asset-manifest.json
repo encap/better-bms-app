@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/better-bms-app/static/css/main.e1e538da.css",
-    "main.js": "/better-bms-app/static/js/main.01fe2cf0.js",
+    "main.js": "/better-bms-app/static/js/main.9b8e152b.js",
     "static/js/787.93d107df.chunk.js": "/better-bms-app/static/js/787.93d107df.chunk.js",
     "static/media/Inter.var.woff2?v=3.19": "/better-bms-app/static/media/Inter.var.c2fe3cb2b7c746f7966a.woff2",
     "static/media/Inter-italic.var.woff2?v=3.19": "/better-bms-app/static/media/Inter-italic.var.30807be7abc48ba8c73c.woff2",
@@ -44,11 +44,11 @@
     "static/media/Inter-Regular.woff2?v=3.19": "/better-bms-app/static/media/Inter-Regular.c8ba52b05a9ef10f4758.woff2",
     "index.html": "/better-bms-app/index.html",
     "main.e1e538da.css.map": "/better-bms-app/static/css/main.e1e538da.css.map",
-    "main.01fe2cf0.js.map": "/better-bms-app/static/js/main.01fe2cf0.js.map",
+    "main.9b8e152b.js.map": "/better-bms-app/static/js/main.9b8e152b.js.map",
     "787.93d107df.chunk.js.map": "/better-bms-app/static/js/787.93d107df.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e1e538da.css",
-    "static/js/main.01fe2cf0.js"
+    "static/js/main.9b8e152b.js"
   ]
 }
