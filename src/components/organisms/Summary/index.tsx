@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { liveDataUIConfig } from 'config/uiConfig';
 import { LiveData } from 'interfaces/data';
@@ -17,6 +17,7 @@ import { InfoGrid } from '../Details/styles';
 import BarGauge from 'components/molecules/BarGauge';
 import { useTheme } from 'styled-components';
 import chroma from 'chroma-js';
+import { useDevice } from 'components/providers/DeviceProvider';
 
 type SummaryProps = {
   liveData: LiveData;
@@ -27,6 +28,8 @@ const Summary = ({ liveData }: SummaryProps) => {
   const [speed, setSpeed] = useState<number | null>(null);
   const previousLiveData = usePrevious(liveData);
   const isFirstMount = useFirstMountState();
+  const geolocationWatcherRef = useRef<number | null>(null);
+  const { status } = useDevice();
 
   const powerGradient = useMemo(() => {
     // Nicer gradient interpolation using LinearRGB method
@@ -36,30 +39,36 @@ const Summary = ({ liveData }: SummaryProps) => {
   }, [theme]);
 
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      (position) => {
-        GlobalLog.info(
-          `Speed: ${position?.coords?.speed === null ? null : position.coords.speed * 3.6} acc: ${
-            position.coords.accuracy
-          } power: ${liveData.power}`
-        );
-        if (position.coords?.accuracy < 100) {
-          setSpeed(position?.coords?.speed === null ? null : position.coords.speed * 3.6);
-        } else {
-          setSpeed(null);
+    if (status === 'connected') {
+      navigator.geolocation?.watchPosition(
+        (position) => {
+          GlobalLog.info(
+            `Speed: ${position?.coords?.speed === null ? null : position.coords.speed * 3.6} acc: ${
+              position.coords.accuracy
+            } power: ${liveData.power}`
+          );
+          if (position.coords?.accuracy < 100) {
+            setSpeed(position?.coords?.speed === null ? null : position.coords.speed * 3.6);
+          } else {
+            setSpeed(null);
+          }
+        },
+        null,
+        {
+          maximumAge: 0,
+          timeout: 2000,
+          enableHighAccuracy: true,
         }
-      },
-      null,
-      {
-        maximumAge: 0,
-        timeout: 2000,
-        enableHighAccuracy: true,
+      );
+    } else {
+      if (geolocationWatcherRef.current) {
+        navigator.geolocation.clearWatch(geolocationWatcherRef.current);
       }
-    );
-  }, [liveData]);
+    }
+  }, [status, setSpeed]);
 
   const mileage = useMemo(() => {
-    if (speed && speed > 1.5 && liveData.power > 0) {
+    if (speed && speed > 1.5 && liveData.power > 50) {
       const avgPower = (previousLiveData?.power ?? liveData.power) + liveData.power / 2;
 
       return avgPower / speed;
