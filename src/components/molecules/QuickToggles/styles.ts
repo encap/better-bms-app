@@ -1,4 +1,3 @@
-import { Toggle } from '@geist-ui/core';
 import styled from 'styled-components';
 
 export const QuickTogglesContainer = styled.div`
@@ -9,37 +8,25 @@ export const QuickTogglesContainer = styled.div`
   gap: 10px;
 `;
 
-export const ToggleWithLabel = styled(Toggle)`
-  height: auto !important;
-  position: relative;
+export const ToggleLabel = styled.label`
+  width: 75px;
+  text-align: right;
+`;
 
-  &::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 100%;
-    top: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    padding-left: 10px;
-    font-size: 18px;
+export const ToggleWithLabel = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  label:last-child {
+    height: auto !important;
   }
 
-  &:first-child {
-    margin-left: 50px;
+  &:nth-child(2n) {
+    flex-direction: row-reverse;
 
-    &::before {
-      right: 100%;
-      left: unset;
-      padding-right: 10px;
-    }
-  }
-
-  &:last-child {
-    margin-right: 50px;
-
-    .toggle {
-      transform: scale(-1);
+    ${ToggleLabel} {
+      text-align: left;
     }
   }
 `;
