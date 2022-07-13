@@ -1,10 +1,21 @@
 import styled from 'styled-components';
+import { InfoGrid } from '../Details/styles';
 
 export const SummaryContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  ${InfoGrid} {
+    align-items: end;
+    margin-top: 4px;
+    grid-template-columns: 1fr 75px 1fr 85px;
+
+    span {
+      font-size: 22px;
+    }
+  }
 `;
 
 export const MainInfoContainer = styled.div`

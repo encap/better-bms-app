@@ -139,19 +139,14 @@ const Summary = ({ liveData }: SummaryProps) => {
         {mileage !== null && (
           <>
             <label>{'Speed: '}</label>
-            <span>{`${speed?.toFixed(1)}km/h`}</span>
+            <span>{`${(speed || 0).toFixed(1)}km/h`}</span>
 
             <label>{'Mileage: '}</label>
-            <span>{`${mileage?.toFixed(1)}wh/km`}</span>
+            <span>{`${(mileage || 0).toFixed(1)}wh/km`}</span>
           </>
         )}
 
-        {formatValue(
-          liveData,
-          'temperatureProbes',
-          liveData.temperatureProbes?.[0],
-          'T controller'
-        )}
+        {formatValue(liveData, 'temperatureProbes', liveData.temperatureProbes?.[0], 'T control')}
         {formatValue(liveData, 'temperatureProbes', liveData.temperatureProbes?.[1], 'T positive')}
 
         {Object.entries(liveData || {})

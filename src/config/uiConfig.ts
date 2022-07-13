@@ -87,7 +87,7 @@ export const liveDataUIConfig: Partial<Record<keyof LiveData, DataItemUIOptions>
   },
   //  Negative = discharge
   balanceCurrent: {
-    label: 'Balance curr',
+    label: 'Balance',
     unit: 'A',
     decimals: 3,
   },
