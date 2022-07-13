@@ -147,7 +147,7 @@ const Summary = ({ liveData }: SummaryProps) => {
       </MainInfoContainer>
 
       <ErrorBoundary fallback={<div />}>
-        <LineChart duration={1000 * 60 * 2} frameRate={5} />
+        <LineChart duration={1000 * 60 * 3} frameRate={5} />
       </ErrorBoundary>
 
       <InfoGrid>

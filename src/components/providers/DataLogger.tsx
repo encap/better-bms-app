@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { GlobalLog } from 'utils/logger';
+import { useDevice } from './DeviceProvider';
 
 const LOG_LIMIT = 10000;
 
@@ -59,6 +60,8 @@ type DataLoggerProviderProps = {
 };
 
 const DataLoggerProvider = ({ children, liveData }: DataLoggerProviderProps) => {
+  const { status } = useDevice();
+
   const [liveDataLog, setLiveDataLog] =
     useState<DataLoggerContextType['liveDataLog']>(emptyLiveDataLog);
   const [pauseTimestamp, setPauseTimestamp] = useState<Units['miliseconds'] | null>(null);
@@ -153,10 +156,16 @@ const DataLoggerProvider = ({ children, liveData }: DataLoggerProviderProps) => 
   }, [liveData, pauseTimestamp]);
 
   useEffect(() => {
-    if (liveData === null) {
-      reset();
+    if (status === 'disconnected') {
+      if (liveDataLog.length && pauseTimestamp === null) {
+        stop();
+      }
+    } else if (status === 'connected') {
+      if (pauseTimestamp !== null) {
+        start();
+      }
     }
-  }, [liveData]);
+  }, [status]);
 
   useEffect(() => {
     if (liveDataLog.length && pauseTimestamp) {

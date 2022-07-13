@@ -1,7 +1,7 @@
 import { useToasts } from '@geist-ui/core';
 import { MouseEventHandler, useCallback, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
-import { useLocalStorage } from 'react-use';
+import { useLatest, useLocalStorage } from 'react-use';
 import { PREVIOUS_DEVICE_LOCAL_STORAGE_KEY } from 'config/index';
 import { JKBMS } from 'devices/jkbms';
 import { useWakelock } from 'hooks/useWakelock';
@@ -33,6 +33,7 @@ const App = () => {
   const { setToast } = useToasts();
 
   const [liveData, setLiveData] = useState<LiveData | null>(null);
+  const liveDataRef = useLatest(liveData);
   const [deviceInfoData, setDeviceInfoData] = useState<DeviceInfoData | null>(null);
   const [settingsData, setSettingsData] = useState<SettingsData | null>(null);
 
@@ -82,8 +83,7 @@ const App = () => {
 
         releaseWakelock();
 
-        console.log('liveData', liveData);
-        if (!liveData) {
+        if (!liveDataRef.current) {
           setSelectedScreen('Logs');
         }
       },
