@@ -5,7 +5,7 @@ export const QuickTogglesContainer = styled.div`
   padding: 4px 16px;
   display: flex;
   justify-content: space-evenly;
-  gap: 10px;
+  gap: 30px;
 `;
 
 export const ToggleLabel = styled.label`

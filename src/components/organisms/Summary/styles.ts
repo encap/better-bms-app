@@ -9,11 +9,11 @@ export const SummaryContainer = styled.div`
 
   ${InfoGrid} {
     align-items: end;
-    margin-top: 4px;
     grid-template-columns: 1fr 75px 1fr 85px;
 
     span {
       font-size: 22px;
+      line-height: 1.25;
     }
   }
 `;
@@ -25,7 +25,7 @@ export const MainInfoContainer = styled.div`
   justify-content: space-between;
   position: relative;
   width: 100%;
-  padding: 0px 3px 8px;
+  padding: 0px 3px 16px;
 `;
 
 export const MiddleContainer = styled.div`

@@ -4,7 +4,7 @@ import { Pause } from '@geist-ui/icons';
 export const ChartContainer = styled.div`
   position: relative;
   width: 100%;
-  height: auto;
+  height: 200px;
 `;
 
 export const ChartClickArea = styled.div`

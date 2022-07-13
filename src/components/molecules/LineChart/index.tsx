@@ -120,6 +120,7 @@ const LineChart = ({ duration, frameRate }: LineChartProps) => {
   const options = useMemo<ChartOptions<'line'>>(
     () => ({
       responsive: true,
+      maintainAspectRatio: false,
       animation: false,
       spanGaps: false,
       scales: {
