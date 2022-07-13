@@ -7,6 +7,7 @@ export type Units = {
   ampHours: number;
   percentage: number;
   miliseconds: number;
+  kmh: number;
 };
 
 export type CellChemistry = 'Li-ion' | 'LFP' | 'Li-po';

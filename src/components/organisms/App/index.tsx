@@ -16,8 +16,12 @@ import { useDevice } from 'components/providers/DeviceProvider';
 import Summary from 'components/organisms/Summary';
 import { AppContainer, ContentContainer } from './styles';
 import PageLoader from 'components/atoms/PageLoader';
-import DataLoggerProvider from 'components/providers/DataLogger';
+import DataLoggerProvider, { AdditionalData } from 'components/providers/DataLogger';
 import Details from '../Details';
+import useWatchSpeed from 'hooks/useWatchSpeed';
+import { useRef } from 'react';
+import { Units } from 'interfaces';
+import { useMemo } from 'react';
 
 export type Screens = 'Logs' | 'Summary' | 'Settings' | 'Details';
 
@@ -38,6 +42,12 @@ const App = () => {
   const [settingsData, setSettingsData] = useState<SettingsData | null>(null);
 
   const [selectedScreen, setSelectedScreen] = useState<Screens>('Logs');
+
+  const speed = useRef<Units['kmh'] | null>(null);
+  const handleNewSpeed = useCallback((newSpeed: Units['kmh'] | null) => {
+    speed.current = newSpeed;
+  }, []);
+  useWatchSpeed({ onChange: handleNewSpeed });
 
   useEffect(() => {
     UILog.info('App rendered');
@@ -132,8 +142,13 @@ const App = () => {
     [status, device]
   );
 
+  const additionalDataLoggerData = useMemo<AdditionalData>(
+    () => ({ speed: speed.current }),
+    [speed.current]
+  );
+
   return (
-    <DataLoggerProvider liveData={liveData}>
+    <DataLoggerProvider liveData={liveData} additionalData={additionalDataLoggerData}>
       <AppContainer onClick={handleClickAnywhere}>
         <TopBar deviceInfoData={deviceInfoData} liveData={liveData} />
         {status === 'connected' && <QuickToggles settingsData={settingsData} />}
@@ -146,7 +161,7 @@ const App = () => {
           {liveData ? (
             <>
               <Freeze freeze={selectedScreen !== 'Summary'}>
-                <Summary liveData={liveData} />
+                <Summary liveData={liveData} speed={speed.current} />
               </Freeze>
               <Freeze freeze={selectedScreen !== 'Details'}>
                 <Details liveData={liveData} />

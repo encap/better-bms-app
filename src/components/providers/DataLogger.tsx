@@ -15,6 +15,10 @@ import { useDevice } from './DeviceProvider';
 
 const LOG_LIMIT = 10000;
 
+export type AdditionalData = Partial<{
+  speed: Units['kmh'] | null;
+}>;
+
 export type LiveDataDatum =
   | (Pick<
       LiveData,
@@ -27,10 +31,11 @@ export type LiveDataDatum =
       | 'percentage'
       | 'temperatureProbes'
       | 'balanceCurrent'
-    > & {
-      // Paused time excluded
-      correctedTimestamp: Units['miliseconds'];
-    })
+    > &
+      AdditionalData & {
+        // Paused time excluded
+        correctedTimestamp: Units['miliseconds'];
+      })
   | null;
 
 export type DataLoggerContextType = {
@@ -57,9 +62,14 @@ export function useDataLogger() {
 type DataLoggerProviderProps = {
   children: ReactNode;
   liveData: LiveData | null;
+  additionalData?: AdditionalData;
 };
 
-const DataLoggerProvider = ({ children, liveData }: DataLoggerProviderProps) => {
+const DataLoggerProvider = ({
+  children,
+  liveData,
+  additionalData = {},
+}: DataLoggerProviderProps) => {
   const { status } = useDevice();
 
   const [liveDataLog, setLiveDataLog] =
@@ -141,6 +151,7 @@ const DataLoggerProvider = ({ children, liveData }: DataLoggerProviderProps) => 
         percentage: liveData.percentage,
         temperatureProbes: liveData.temperatureProbes,
         balanceCurrent: liveData.balanceCurrent,
+        speed: additionalData.speed,
       };
 
       setLiveDataLog((current) => {

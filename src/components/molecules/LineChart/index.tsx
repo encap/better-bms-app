@@ -21,21 +21,26 @@ import { UILog } from 'utils/logger';
 import { useLongPress, LongPressDetectEvents } from 'use-long-press';
 import { useTheme } from 'styled-components';
 import { LiveDataDatum, useDataLogger } from 'components/providers/DataLogger';
+import { Units } from 'interfaces/index';
+import { useDevice } from 'components/providers/DeviceProvider';
+
 Chart.register(ChartStreaming);
 Chart.register(TimeScale);
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 type LineChartProps = {
-  duration: number;
+  duration: Units['miliseconds'];
   frameRate: number;
   showGridLines?: boolean;
   showXAxisLabels?: boolean;
+  currentSpeed?: Units['kmh'];
 };
 
 const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: LineChartProps) => {
   const chartRef = useRef<ChartJSOrUndefined<'line', LiveDataDatum[]>>();
   const theme = useTheme();
   const { liveDataLog, isPaused, stop, start, reset } = useDataLogger();
+  const { status } = useDevice();
 
   const handleLongPress = useCallback(() => {
     UILog.log(`Reset chart on long press`, {
@@ -62,12 +67,16 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
       });
 
       if (isPaused) {
-        start();
+        if (status === 'connected') {
+          start();
+        } else {
+          UILog.log(`Can't resume updates when disconnected`, { status, ev, isPaused });
+        }
       } else {
         stop();
       }
     },
-    [isPaused]
+    [isPaused, status === 'connected']
   );
 
   const bindLongPress = useLongPress(handleLongPress, {
@@ -80,6 +89,17 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
     () => ({
       datasets: [
         {
+          label: 'Speed',
+          data: [],
+          borderColor: theme.accents_7,
+          backgroundColor: 'none',
+          parsing: {
+            xAxisKey: 'correctedTimestamp',
+            yAxisKey: 'speed',
+          },
+          yAxisId: 'ySpeed',
+        },
+        {
           label: 'Voltage',
           data: [],
           borderColor: theme.success,
@@ -88,7 +108,7 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
             xAxisKey: 'correctedTimestamp',
             yAxisKey: 'voltage',
           },
-          yAxisId: 'y',
+          yAxisId: 'yVoltage',
         },
         {
           label: 'Current',
@@ -99,7 +119,7 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
             xAxisKey: 'correctedTimestamp',
             yAxisKey: 'current',
           },
-          yAxisID: 'y1',
+          yAxisID: 'yCurrent',
         },
         {
           label: 'Ping',
@@ -111,7 +131,7 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
             xAxisKey: 'correctedTimestamp',
             yAxisKey: 'timeSinceLastOne',
           },
-          yAxisID: 'y2',
+          yAxisID: 'yPing',
           hidden: duration > 1000 * 60 * 10,
         },
       ],
@@ -132,13 +152,21 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
             display: Boolean(showXAxisLabels),
           },
         },
-        y: {
+        ySpeed: {
+          type: 'linear',
+          display: false,
+          position: 'right',
+          suggestedMin: 0,
+          suggestedMax: 80,
+          beginAtZero: true,
+        },
+        yVoltage: {
           type: 'linear',
           position: 'left',
           suggestedMin: 50,
           suggestedMax: 84,
         },
-        y1: {
+        yCurrent: {
           type: 'linear',
           display: true,
           position: 'right',
@@ -152,7 +180,7 @@ const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: Line
           suggestedMax: 50,
           beginAtZero: true,
         },
-        y2: {
+        yPing: {
           type: 'linear',
           display: false,
           position: 'right',

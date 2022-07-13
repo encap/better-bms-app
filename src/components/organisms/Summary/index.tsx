@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { liveDataUIConfig } from 'config/uiConfig';
 import { LiveData } from 'interfaces/data';
@@ -11,25 +11,21 @@ import {
   MainInfoContainer,
 } from './styles';
 import LineChart from 'components/molecules/LineChart';
-import { GlobalLog } from 'utils/logger';
-import { useFirstMountState, usePrevious } from 'react-use';
+import { usePrevious } from 'react-use';
 import { InfoGrid } from '../Details/styles';
 import BarGauge from 'components/molecules/BarGauge';
 import { useTheme } from 'styled-components';
 import chroma from 'chroma-js';
-import { useDevice } from 'components/providers/DeviceProvider';
+import { Units } from 'interfaces/index';
 
 type SummaryProps = {
   liveData: LiveData;
+  speed: Units['kmh'] | null;
 };
 
-const Summary = ({ liveData }: SummaryProps) => {
+const Summary = ({ liveData, speed }: SummaryProps) => {
   const theme = useTheme();
-  const speed = useRef<number | null>(null);
   const previousLiveData = usePrevious(liveData);
-  const isFirstMount = useFirstMountState();
-  const geolocationWatcherRef = useRef<number | null>(null);
-  const { status } = useDevice();
 
   const powerGradient = useMemo(() => {
     // Nicer gradient interpolation using LinearRGB method
@@ -38,37 +34,11 @@ const Summary = ({ liveData }: SummaryProps) => {
     return `linear-gradient(to top, ${scale.join(', ')} 80%)`;
   }, [theme]);
 
-  useEffect(() => {
-    if (status === 'connected') {
-      navigator.geolocation?.watchPosition(
-        (position) => {
-          const kmh = position?.coords?.speed === null ? null : position.coords.speed * 3.6;
-
-          if (position.coords?.accuracy < 35) {
-            speed.current = kmh;
-          } else {
-            speed.current = null;
-          }
-        },
-        null,
-        {
-          maximumAge: 1000,
-          timeout: 2000,
-          enableHighAccuracy: true,
-        }
-      );
-    } else {
-      if (geolocationWatcherRef.current) {
-        navigator.geolocation.clearWatch(geolocationWatcherRef.current);
-      }
-    }
-  }, [status]);
-
   const mileage = useMemo(() => {
-    if (speed.current && speed.current > 1.5 && liveData.power >= 100) {
+    if (speed && speed > 1.5 && liveData.power >= 100) {
       const avgPower = (previousLiveData?.power ?? liveData.power) + liveData.power / 2;
 
-      return avgPower / speed.current;
+      return avgPower / speed;
     }
 
     return null;
@@ -86,19 +56,6 @@ const Summary = ({ liveData }: SummaryProps) => {
 
     return null;
   }, [mileage]);
-
-  useEffect(() => {
-    if (!isFirstMount) {
-      if (speed.current === null) {
-        GlobalLog.info(
-          `Tracking speed (${speed.current} km/h) end estimating milage (${mileage}km)`,
-          { speed }
-        );
-      } else {
-        GlobalLog.info(`Not tracking speed. Milage not available`);
-      }
-    }
-  }, [speed.current === null]);
 
   return (
     <SummaryContainer>
@@ -153,11 +110,7 @@ const Summary = ({ liveData }: SummaryProps) => {
       <InfoGrid>
         <>
           <label>{'Speed: '}</label>
-          <span>
-            {speed.current === null
-              ? `-`
-              : `${(speed.current > 2 ? speed.current : 0).toFixed(1)}km/h`}
-          </span>
+          <span>{speed === null ? `-` : `${(speed > 2 ? speed : 0).toFixed(1)}km/h`}</span>
 
           <label>{'Mileage: '}</label>
           <span>{mileage === null ? `-` : `${mileage.toFixed(0)}wh/km`}</span>
