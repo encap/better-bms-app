@@ -9,7 +9,7 @@ export const SummaryContainer = styled.div`
 
   ${InfoGrid} {
     align-items: end;
-    grid-template-columns: 1fr 75px 1fr 85px;
+    grid-template-columns: 1fr 85px 1fr 85px;
 
     span {
       font-size: 22px;
