@@ -24,7 +24,7 @@ const Details = ({ liveData }: DetailsProps) => {
   return (
     <DetailsContainer>
       <ErrorBoundary fallback={<div />}>
-        <LineChart duration={1000 * 60 * 30} frameRate={1} />
+        <LineChart duration={1000 * 60 * 30} frameRate={1} showXAxisLabels showGridLines />
       </ErrorBoundary>
 
       <InfoGrid>

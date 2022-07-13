@@ -28,9 +28,11 @@ Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Too
 type LineChartProps = {
   duration: number;
   frameRate: number;
+  showGridLines?: boolean;
+  showXAxisLabels?: boolean;
 };
 
-const LineChart = ({ duration, frameRate }: LineChartProps) => {
+const LineChart = ({ duration, frameRate, showGridLines, showXAxisLabels }: LineChartProps) => {
   const chartRef = useRef<ChartJSOrUndefined<'line', LiveDataDatum[]>>();
   const theme = useTheme();
   const { liveDataLog, isPaused, stop, start, reset } = useDataLogger();
@@ -127,7 +129,7 @@ const LineChart = ({ duration, frameRate }: LineChartProps) => {
         x: {
           type: 'realtime',
           ticks: {
-            display: false,
+            display: Boolean(showXAxisLabels),
           },
         },
         y: {
@@ -140,9 +142,12 @@ const LineChart = ({ duration, frameRate }: LineChartProps) => {
           type: 'linear',
           display: true,
           position: 'right',
-          grid: {
-            drawOnChartArea: false,
-          },
+          grid: showGridLines
+            ? {
+                display: true,
+                color: '#171717',
+              }
+            : undefined,
           suggestedMin: 0,
           suggestedMax: 50,
           beginAtZero: true,
@@ -151,9 +156,6 @@ const LineChart = ({ duration, frameRate }: LineChartProps) => {
           type: 'linear',
           display: false,
           position: 'right',
-          grid: {
-            drawOnChartArea: false,
-          },
           min: 200,
           max: 600,
         },
@@ -179,7 +181,7 @@ const LineChart = ({ duration, frameRate }: LineChartProps) => {
         },
       },
     }),
-    [duration, frameRate]
+    [duration, frameRate, showXAxisLabels, showGridLines]
   );
 
   useEffect(() => {
